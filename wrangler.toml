@@ -1,0 +1,27 @@
+name = "barrington-mtg"
+main = "src/worker.js"
+compatibility_date = "2025-05-01"
+
+# Serve the front-end (public/) as static assets. The Worker handles /api/* first;
+# everything else falls back to index.html so /view/<token> works (single-page app).
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+# D1 database binding. Fill in database_id after you run:
+#   npx wrangler d1 create mtg-collection
+[[d1_databases]]
+binding = "DB"
+database_name = "mtg-collection"
+database_id = "821af285-4e85-46ac-86e4-ddb0ed5256e3"
+
+[vars]
+# The random token that appears in your read-only share link.
+# Change this to any long random string before deploying.
+SHARE_TOKEN = "barrington-47ac9be1a4a44c54"
+
+# Secrets (do NOT put these here — set them with `wrangler secret put`):
+#   OWNER_KEY         your private edit passphrase
+#   ANTHROPIC_API_KEY your Anthropic API key (for the AI Analysis button)
