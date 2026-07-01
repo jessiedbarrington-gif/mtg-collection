@@ -30,9 +30,21 @@ The live DB has more columns than schema.sql (added via ALTER TABLE). Current fu
 Location values: `'deck'` | `'loose'` | `'wishlist'`
 
 ## AI — CRITICAL GOTCHA
-**NEVER add `temperature` to Anthropic structured-output calls.** The `output_config.format.type="json_schema"` API rejects it with a 400 error. Use `collectionSig` caching for determinism instead. All AI calls go through `anthropicJSON(env, payload, maxRetries=3)` which retries on 429/529/5xx.
+**NEVER add `temperature` to Anthropic structured-output calls.** The `output_config.format.type="json_schema"` API rejects it with a 400 error. Use `collectionSig`/`tagSig`/`analysisSig` caching for determinism instead. All AI calls go through `anthropicJSON(env, payload, maxRetries=3)` which retries on 429/529/5xx.
 
-Model used: `claude-opus-4-8`
+## AI — Cost Control
+Each AI call uses the smallest model that reliably handles its task (cost mitigation, added 2026-07). Every cached call skips the AI entirely (and shows `cached: true` in the response) when its signature is unchanged since last run:
+| Call | Model | Cached via |
+|---|---|---|
+| `saveGoalWithSummary` (goal one-liner) | `claude-haiku-4-5-20251001` | — (tiny, always runs) |
+| `generateDirections` | `claude-sonnet-5` | — |
+| `scanCard` (vision) | `claude-sonnet-5` | — (per-photo, expected) |
+| `tagDeck` | `claude-sonnet-5` | `decks.tag_sig` vs `tagSig(cards, goal)` |
+| `generateAnalysis` | `claude-sonnet-5` | `analysis.analysis_sig` vs `analysisSig(cards, deck)` |
+| `generateCollection` | `claude-sonnet-5` | `analysis.collection_sig` vs `collectionSig(...)` |
+| `buildIdea` (deck builder) | `claude-opus-4-8` | — (kept on Opus: real-card legality + creative construction, highest hallucination risk) |
+
+When adding a new AI call, pick a model deliberately rather than defaulting to Opus — reserve Opus for tasks needing deep knowledge/creativity where mistakes are costly (e.g. inventing illegal cards). Structured classification/extraction tasks (tagging, scanning, filtering) do fine on Sonnet; trivial one-liners do fine on Haiku.
 
 ## Scryfall Integration
 - Batch pricing: POST `/cards/collection` (max 75 per request)
@@ -62,7 +74,7 @@ Model used: `claude-opus-4-8`
 | `generateAnalysis` / `genAnalysis()` | AI deck analysis |
 | `generateCollection` / `genCollection()` | AI collection swap recommendations |
 | `generateDirections` / `genDirections()` | AI 3 direction suggestions |
-| `collectionSig()` | djb2 hash for caching collection recs |
+| `collectionSig()` / `tagSig()` / `analysisSig()` | djb2 hash (via `sigHash`) for caching collection recs / tagging / analysis — skips the AI call if inputs are unchanged |
 | `anthropicJSON(env, payload)` | Retrying Anthropic API wrapper |
 
 ## Key Backend Routes

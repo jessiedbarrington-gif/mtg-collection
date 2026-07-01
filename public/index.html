@@ -439,7 +439,7 @@ main{padding:28px 32px;max-width:1200px;}
           <option value="4">Bracket 4 · Optimized</option>
           <option value="5">Bracket 5 · cEDH</option>
         </select>
-        <button class="btn btn-p" id="bi-gen" onclick="genBuildIdea()">✨ Draft my deck</button>
+        <button class="btn btn-p" id="bi-gen" onclick="genBuildIdea()">✨ Draft my deck (AI)</button>
       </div>
       <div id="bi-result" style="margin-top:12px;"></div>
     </div>
@@ -558,7 +558,7 @@ main{padding:28px 32px;max-width:1200px;}
       <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>📊 Deck Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
       <div>
         <div class="owner-only" style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="btn btn-p" id="analyze-btn" onclick="runAnalysis()" style="font-size:12px;padding:6px 12px;">⚙ Run analysis</button>
+          <button class="btn btn-p" id="analyze-btn" onclick="runAnalysis()" style="font-size:12px;padding:6px 12px;">⚙ Run AI tagging</button>
           <span style="font-size:11px;color:var(--text-dim);">Tags every card by role, then computes the dashboard (~30s).</span>
         </div>
         <div id="analysis-dash"></div>
@@ -573,7 +573,7 @@ main{padding:28px 32px;max-width:1200px;}
           <div style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-p owner-only" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button><span class="owner-only" style="font-size:11px;color:var(--text-dim);">then Regenerate below to apply it</span></div>
           <div id="goal-summary" style="font-size:12px;color:var(--accent-b);margin-top:9px;font-style:italic;"></div>
           <div class="owner-only" style="margin-top:10px;">
-            <button class="btn" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions</button>
+            <button class="btn" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>
             <span style="font-size:11px;color:var(--text-dim);margin-left:6px;">AI proposes 3 paths — pick one to make it active.</span>
           </div>
           <div id="directions-area" style="margin-top:10px;"></div>
@@ -672,7 +672,7 @@ main{padding:28px 32px;max-width:1200px;}
     <input type="file" id="scan-input" accept="image/*" capture="environment" multiple style="display:none;" onchange="onScanFiles(event)"/>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <button class="btn btn-p" onclick="document.getElementById('scan-input').click()">＋ Take / add photo(s)</button>
-      <button class="btn" id="scan-identify" onclick="identifyScans()" disabled>🔍 Identify cards</button>
+      <button class="btn" id="scan-identify" onclick="identifyScans()" disabled>🔍 Identify cards (AI)</button>
     </div>
     <div id="scan-staged" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
     <div id="scan-results"></div>
@@ -1533,7 +1533,7 @@ async function identifyScans() {
     } catch (e) { scanResults.push({ name: '', set: '', thumb: s.thumb }); }
   }
   renderScanResults();
-  btn.disabled = false; btn.textContent = '🔍 Identify cards';
+  btn.disabled = false; btn.textContent = '🔍 Identify cards (AI)';
 }
 function renderScanResults() {
   const area = document.getElementById('scan-results');
@@ -1583,7 +1583,7 @@ async function genBuildIdea() {
     renderBuildIdea(r);
   } catch (e) {
     document.getElementById('bi-result').innerHTML = '<p class="analysis-p" style="color:var(--accent-r)">' + esc(e.message) + '</p>';
-  } finally { btn.disabled = false; btn.textContent = '✨ Draft my deck'; }
+  } finally { btn.disabled = false; btn.textContent = '✨ Draft my deck (AI)'; }
 }
 function renderBuildIdea(r) {
   lastBuildIdea = r;
@@ -2346,7 +2346,7 @@ function renderDash(n) {
   const el = document.getElementById('analysis-dash');
   if (!el) return;
   if (!n || n.error || !n.tagged) {
-    el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not analyzed yet — click <b>Run analysis</b> to tag every card by role and build the dashboard.</p>';
+    el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not analyzed yet — click <b>Run AI tagging</b> to tag every card by role and build the dashboard.</p>';
     return;
   }
   let h = '<div class="dash-sub">Core ratios</div>';
@@ -2417,13 +2417,13 @@ async function loadNumbers(deckId) {
 async function runAnalysis() {
   if (!currentDeckId) return;
   const btn = document.getElementById('analyze-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⚙ Analyzing… (~30s)'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⚙ AI tagging… (~30s)'; }
   try {
-    await api('/api/decks/' + currentDeckId + '/tag', { method: 'POST' });
+    const r = await api('/api/decks/' + currentDeckId + '/tag', { method: 'POST' });
     await loadNumbers(currentDeckId);
-    toast('Analysis updated.');
+    toast(r.cached ? 'No changes since last tagging — used cached result (no AI credits used).' : 'Analysis updated (AI credits used).');
   } catch (e) { toast(e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = '⚙ Run analysis'; } }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '⚙ Run AI tagging'; } }
 }
 
 async function loadAnalysis(deckId) {
@@ -2452,7 +2452,7 @@ async function loadAnalysis(deckId) {
       sArea.innerHTML = strategyHTML(r.analysis);
       wArea.innerHTML = swapsHTML(r.analysis);
       const dm = dateMeta(r.generatedAt);
-      sMeta.innerHTML = dm + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate</button>');
+      sMeta.innerHTML = dm + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate (AI)</button>');
       document.getElementById('swaps-meta').innerHTML = dm;
     } else if (READONLY) {
       sArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">No AI analysis yet.</p>';
@@ -2504,7 +2504,7 @@ async function genDirections() {
     if (d) d.directions = r.directions;
     renderDirections(d);
   } catch (e) { toast(e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = '✨ Suggest 3 directions'; } }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '✨ Suggest 3 directions (AI)'; } }
 }
 async function useDirection(i) {
   const x = currentDirections[i];
@@ -2523,13 +2523,13 @@ function renderCollection(deckId, col, d) {
     cArea.innerHTML = (col.recs && col.recs.length)
       ? '<div class="swaps-grid">' + col.recs.map(ownedSwapCard).join('') + '</div>'
       : '<p class="analysis-p" style="color:var(--text-muted)">None of your loose cards are a clear upgrade for this deck right now.</p>';
-    cMeta.innerHTML = dateMeta(col.generatedAt) + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genCollection(\'' + deckId + '\')">↻ Update</button>');
+    cMeta.innerHTML = dateMeta(col.generatedAt) + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genCollection(\'' + deckId + '\')">↻ Update (AI)</button>');
   } else if (READONLY) {
     cArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not generated yet.</p>';
   } else if (d && d.cards.length === 0) {
     cArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Add cards first.</p>';
   } else {
-    cArea.innerHTML = '<button class="gen-btn" onclick="genCollection(\'' + deckId + '\')">★ Find upgrades I already own</button>';
+    cArea.innerHTML = '<button class="gen-btn" onclick="genCollection(\'' + deckId + '\')">★ Find upgrades I already own (AI)</button>';
   }
 }
 
@@ -2544,10 +2544,11 @@ async function genAnalysis(deckId) {
     sArea.innerHTML = strategyHTML(r.analysis);
     wArea.innerHTML = swapsHTML(r.analysis);
     const dm = dateMeta(r.generatedAt);
-    document.getElementById('strategy-meta').innerHTML = dm + '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate</button>';
+    document.getElementById('strategy-meta').innerHTML = dm + '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate (AI)</button>';
     document.getElementById('swaps-meta').innerHTML = dm;
     const d = STATE.decks.find((x) => x.id === deckId);
     if (d) { d.hasAnalysis = true; d.power = r.analysis.power || d.power; renderBreakdown(d); }
+    toast(r.cached ? 'No changes since last analysis — used cached result (no AI credits used).' : 'Analysis updated (AI credits used).');
     // Regenerating the analysis also refreshes the "from your collection" recommendations.
     genCollection(deckId);
   } catch (e) {
@@ -2564,6 +2565,7 @@ async function genCollection(deckId) {
   try {
     const r = await api('/api/decks/' + deckId + '/collection', { method: 'POST' });
     renderCollection(deckId, { exists: true, recs: r.recs, generatedAt: r.generatedAt }, STATE.decks.find((x) => x.id === deckId));
+    if (r.cached) toast('No changes — used cached collection recs (no AI credits used).');
   } catch (e) {
     cArea.innerHTML = '<p class="analysis-p" style="color:var(--accent-r)">' + esc(e.message) + '</p>' +
       '<button class="gen-btn" style="margin-top:8px" onclick="genCollection(\'' + deckId + '\')">Try again</button>';

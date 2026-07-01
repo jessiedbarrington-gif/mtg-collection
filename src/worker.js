@@ -167,6 +167,8 @@ async function handleApi(request, env, url) {
       "ALTER TABLE cards ADD COLUMN condition TEXT DEFAULT 'NM'",
       "ALTER TABLE cards ADD COLUMN acquisition_price REAL",
       "ALTER TABLE cards ADD COLUMN price_foil REAL",
+      "ALTER TABLE decks ADD COLUMN tag_sig TEXT",
+      "ALTER TABLE analysis ADD COLUMN analysis_sig TEXT",
     ];
     const results = [];
     for (const sql of stmts) {
@@ -746,7 +748,7 @@ async function saveGoalWithSummary(env, deckId, body) {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-opus-4-8",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 80,
           system:
             "You distill a Magic: The Gathering Commander deck's strategic direction into ONE short, punchy sentence (about 12 words or fewer). Reply with ONLY that sentence — no preamble, no quotes.",
@@ -804,7 +806,7 @@ async function generateDirections(env, deckId) {
   const list = cards.map((c) => c.name).join(", ");
 
   const out = await anthropicJSON(env, {
-    model: "claude-opus-4-8",
+    model: "claude-sonnet-5",
     max_tokens: 1200,
     system:
       "You are an expert Magic: The Gathering Commander deck advisor. Given a deck, propose exactly 3 DISTINCT directions the " +
@@ -847,7 +849,7 @@ async function scanCard(env, body) {
   const media = body.media || "image/jpeg";
 
   const out = await anthropicJSON(env, {
-    model: "claude-opus-4-8",
+    model: "claude-sonnet-5",
     max_tokens: 300,
     system:
       "You identify Magic: The Gathering cards from a photo. Return the EXACT printed card name. " +
@@ -1001,10 +1003,16 @@ async function tagDeck(env, deckId) {
   if (!deck) return json({ error: "Deck not found" }, 404);
   const cards = (
     await env.DB.prepare(
-      "SELECT id, name, type_cat, mana_cost, cmc FROM cards WHERE deck_id = ? ORDER BY position, id"
+      "SELECT id, name, type_cat, mana_cost, cmc, roles FROM cards WHERE deck_id = ? ORDER BY position, id"
     ).bind(deckId).all()
   ).results || [];
   if (!cards.length) return json({ error: "This deck has no cards yet." }, 400);
+
+  // Skip the AI call entirely if the decklist + direction haven't changed since the last tag pass.
+  const sig = tagSig(cards, deck.goal);
+  if (deck.tag_sig === sig && cards.every((c) => c.roles != null)) {
+    return json({ ok: true, tagged: cards.length, total: cards.length, taggedAt: deck.tagged_at, cached: true });
+  }
 
   const list = cards
     .map((c) => `${c.name} — ${c.type_cat || "?"}${c.mana_cost ? " " + c.mana_cost : ""}`)
@@ -1015,7 +1023,7 @@ async function tagDeck(env, deckId) {
     `\nTag every card below with its roles and weight.\n\nDecklist:\n${list}`;
 
   const out = await anthropicJSON(env, {
-    model: "claude-opus-4-8",
+    model: "claude-sonnet-5",
     max_tokens: 8000,
     system: TAG_SYSTEM,
     messages: [{ role: "user", content: userText }],
@@ -1063,7 +1071,7 @@ async function tagDeck(env, deckId) {
   }
   for (let i = 0; i < updates.length; i += 100) await env.DB.batch(updates.slice(i, i + 100));
   const now = new Date().toISOString();
-  await env.DB.prepare("UPDATE decks SET tagged_at = ? WHERE id = ?").bind(now, deckId).run();
+  await env.DB.prepare("UPDATE decks SET tagged_at = ?, tag_sig = ? WHERE id = ?").bind(now, sig, deckId).run();
   return json({ ok: true, tagged: matched.size, total: cards.length, taggedAt: now });
 }
 
@@ -1461,6 +1469,21 @@ async function generateAnalysis(env, deckId) {
     );
   }
 
+  // Skip the AI call entirely if the decklist + direction haven't changed since the last analysis.
+  const sig = analysisSig(cards, deck);
+  const existingRow = await env.DB.prepare(
+    "SELECT content, analysis_sig, model, generated_at FROM analysis WHERE deck_id = ?"
+  ).bind(deckId).first();
+  if (existingRow && existingRow.content && existingRow.analysis_sig === sig) {
+    return json({
+      exists: true,
+      analysis: JSON.parse(existingRow.content),
+      model: existingRow.model,
+      generatedAt: existingRow.generated_at,
+      cached: true,
+    });
+  }
+
   const colorNames = {
     w: "White",
     u: "Blue",
@@ -1508,8 +1531,9 @@ async function generateAnalysis(env, deckId) {
     numbersText +
     goalLine;
 
+  const ANALYSIS_MODEL = "claude-sonnet-5";
   const body = {
-    model: "claude-opus-4-8",
+    model: ANALYSIS_MODEL,
     max_tokens: 4000,
     system: ANALYSIS_SYSTEM,
     messages: [{ role: "user", content: userText }],
@@ -1555,10 +1579,10 @@ async function generateAnalysis(env, deckId) {
 
   const now = new Date().toISOString();
   await env.DB.prepare(
-    "INSERT INTO analysis (deck_id, content, model, generated_at) VALUES (?, ?, ?, ?) " +
-      "ON CONFLICT(deck_id) DO UPDATE SET content = excluded.content, model = excluded.model, generated_at = excluded.generated_at"
+    "INSERT INTO analysis (deck_id, content, model, generated_at, analysis_sig) VALUES (?, ?, ?, ?, ?) " +
+      "ON CONFLICT(deck_id) DO UPDATE SET content = excluded.content, model = excluded.model, generated_at = excluded.generated_at, analysis_sig = excluded.analysis_sig"
   )
-    .bind(deckId, JSON.stringify(analysis), "claude-opus-4-8", now)
+    .bind(deckId, JSON.stringify(analysis), ANALYSIS_MODEL, now, sig)
     .run();
   try {
     await env.DB.prepare("UPDATE decks SET power = ? WHERE id = ?")
@@ -1566,7 +1590,7 @@ async function generateAnalysis(env, deckId) {
       .run();
   } catch (_) {}
 
-  return json({ exists: true, analysis, model: "claude-opus-4-8", generatedAt: now });
+  return json({ exists: true, analysis, model: ANALYSIS_MODEL, generatedAt: now });
 }
 
 const COLLECTION_SCHEMA = {
@@ -1724,7 +1748,7 @@ async function generateCollection(env, deckId) {
     `\n\nLoose cards the player OWNS (recommend ONLY from these, each at most once, and never a card already in the decklist):\n${ownedNames.join("\n")}`;
 
   const body = {
-    model: "claude-opus-4-8",
+    model: "claude-sonnet-5",
     max_tokens: 5000,
     system: COLLECTION_SYSTEM,
     messages: [{ role: "user", content: userText }],
@@ -1755,10 +1779,29 @@ async function generateCollection(env, deckId) {
   return json({ exists: true, recs, generatedAt: now });
 }
 
-// Stable signature of the inputs that determine collection recommendations.
-function collectionSig(deckNames, ownedNames, goal) {
-  const s = deckNames.slice().sort().join("|") + "##" + ownedNames.slice().sort().join("|") + "##" + (goal || "");
+// djb2 hash — stable, cheap signature for cache-key strings.
+function sigHash(s) {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
   return String(h);
+}
+
+// Stable signature of the inputs that determine collection recommendations.
+function collectionSig(deckNames, ownedNames, goal) {
+  return sigHash(deckNames.slice().sort().join("|") + "##" + ownedNames.slice().sort().join("|") + "##" + (goal || ""));
+}
+
+// Stable signature of the inputs that determine card tagging (roles/weight).
+function tagSig(cards, goal) {
+  const s = cards.map((c) => `${c.name}|${c.type_cat || ""}|${c.cmc ?? ""}`).sort().join("##") + "::" + (goal || "");
+  return sigHash(s);
+}
+
+// Stable signature of the inputs that determine the main AI analysis.
+function analysisSig(cards, deck) {
+  const s =
+    cards.map((c) => `${c.qty}x${c.name}`).sort().join("|") +
+    "::" + (deck.goal || "") +
+    "::" + deck.commander + "|" + (deck.alt_commander || "") + "|" + (deck.reliance || "");
+  return sigHash(s);
 }
