@@ -17,7 +17,7 @@
 :root{
   --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;
   --accent-b:#60a5fa;--accent-g:#4ade80;--accent-r:#f87171;--accent-p:#c084fc;
-  --accent-y:#fbbf24;--text:#e8eaf0;--text-muted:#8b90a4;--text-dim:#555870;--radius:8px;
+  --accent-y:#fbbf24;--text:#e8eaf0;--text-muted:#a7b0c2;--text-dim:#767a94;--radius:8px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;}
@@ -37,9 +37,12 @@ main{padding:28px 32px;max-width:1200px;}
 .deck-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
 @media(max-width:900px){.deck-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:580px){.deck-grid{grid-template-columns:1fr;}}
-.deck-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:transform .15s,border-color .2s;position:relative;overflow:hidden;}
+.deck-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:transform .15s,border-color .2s;position:relative;overflow:hidden;display:flex;flex-direction:column;}
 .deck-card:hover{transform:translateY(-2px);border-color:#444;}
-.deck-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.deck-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:2;}
+.deck-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.14;pointer-events:none;z-index:0;}
+.deck-card>*{position:relative;z-index:1;}
+.deck-card .deck-meta{margin-top:auto;}
 .jund::before{background:linear-gradient(90deg,#f87171,#4ade80,#1a1a1a);}
 .simic::before{background:linear-gradient(90deg,#4ade80,#60a5fa);}
 .five::before{background:linear-gradient(90deg,#e2e8f0,#60a5fa,#1a1a1a,#f87171,#4ade80);}
@@ -265,6 +268,14 @@ main{padding:28px 32px;max-width:1200px;}
 .lock-err{color:var(--accent-r);font-size:12px;margin-top:10px;min-height:16px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 18px;font-size:13px;color:var(--text);box-shadow:0 8px 24px #0008;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;}
 .toast.show{opacity:1;}
+.undo-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text);box-shadow:0 8px 24px #0008;z-index:60;}
+.undo-toast button{background:none;border:none;color:var(--accent-b);font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;}
+.undo-toast button:hover{text-decoration:underline;}
+.settings-wrap{position:relative;display:inline-block;}
+.settings-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;z-index:70;min-width:170px;box-shadow:0 8px 24px #0008;}
+.settings-menu.show{display:block;}
+.settings-menu button{display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;border-radius:6px;}
+.settings-menu button:hover{background:var(--surface);}
 @media(max-width:600px){
   header{padding:18px 14px;}
   nav{padding:0 14px;}
@@ -352,13 +363,9 @@ main{padding:28px 32px;max-width:1200px;}
     <div class="header-title">Barrington MTG Collection</div>
     <div class="header-sub">Commander Decks &amp; Loose Cards</div>
   </div>
-  <div class="stats-row">
-    <div class="stat"><div class="stat-num" id="s-decks">—</div><div class="stat-label">Decks</div></div>
-    <div class="stat"><div class="stat-num" id="s-loose">—</div><div class="stat-label">Loose Cards</div></div>
-    <div class="stat"><div class="stat-num" id="s-sale">—</div><div class="stat-label">For Sale</div></div>
-    <div class="stat" style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-      <span class="mode-chip" id="mode-chip"></span>
-    </div>
+  <div class="stats-row" style="align-items:center;gap:10px;">
+    <span class="mode-chip" id="mode-chip"></span>
+    <button class="btn owner-only" id="header-lock" onclick="lockSite()" title="Log out — clears your owner key from this browser" style="font-size:12px;padding:5px 11px;">🔒 Lock</button>
   </div>
 </header>
 <nav>
@@ -375,7 +382,15 @@ main{padding:28px 32px;max-width:1200px;}
     <div class="owner-only" style="margin:4px 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-p" onclick="copyShare()">🔗 Share this collection</button>
       <button class="btn" id="vb-refresh" onclick="refreshPrices()">⟳ Refresh Prices</button>
-      <button class="btn owner-only" onclick="runMigration()" title="Add new DB columns — run once after updating the app">⚙ DB Migrate</button>
+      <button class="btn" onclick="exportCsv()" title="Download your whole collection as a spreadsheet">⬇ Export CSV</button>
+      <div class="settings-wrap owner-only">
+        <button class="btn" onclick="event.stopPropagation(); toggleSettingsMenu()" title="Settings">⚙ Settings</button>
+        <div id="settings-menu" class="settings-menu">
+          <button onclick="exportCsv()">⬇ Export collection CSV</button>
+          <button onclick="runMigration()">⚙ DB Migrate</button>
+          <button onclick="lockSite()">🔒 Lock (log out)</button>
+        </div>
+      </div>
       <span id="home-updated" style="font-size:11px;color:var(--text-dim);"></span>
       <span style="font-size:11px;color:var(--text-muted);">Share sends a <b>view-only</b> link — no editing, add/remove, or AI.</span>
     </div>
@@ -475,6 +490,8 @@ main{padding:28px 32px;max-width:1200px;}
     <div class="toolbar">
       <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Search…" oninput="looseSearch=this.value; renderLoose();"/></div>
       <select class="filter-sel" id="loose-type" onchange="looseTypeFilter=this.value; renderLoose();"><option value="">All types</option></select>
+      <select class="filter-sel" id="loose-color" onchange="looseColorFilter=this.value; renderLoose();"><option value="">All colors</option><option value="w">White</option><option value="u">Blue</option><option value="k">Black</option><option value="r">Red</option><option value="g">Green</option><option value="c">Colorless</option></select>
+      <select class="filter-sel" id="loose-set" onchange="looseSetFilter=this.value; renderLoose();"><option value="">All sets</option></select>
       <select class="filter-sel" id="loose-sort" onchange="looseSort=this.value; renderLoose();"><option value="">Sort: Default</option><option value="name">Name</option><option value="type">Type</option><option value="cmc">Mana value</option><option value="price">Price ↓</option></select>
       <button class="btn owner-only" onclick="toggleForm('form-loose')">+ Add Card</button>
       <button class="btn btn-p owner-only" onclick="openScanModal({location:'loose'})">📷 Scan</button>
@@ -554,41 +571,7 @@ main{padding:28px 32px;max-width:1200px;}
       </div>
     </div>
     <div class="analysis-box" id="detail-breakdown" style="display:none;"></div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>📊 Deck Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
-      <div>
-        <div class="owner-only" style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="btn btn-p" id="analyze-btn" onclick="runAnalysis()" style="font-size:12px;padding:6px 12px;">⚙ Run AI tagging</button>
-          <span style="font-size:11px;color:var(--text-dim);">Tags every card by role, then computes the dashboard (~30s).</span>
-        </div>
-        <div id="analysis-dash"></div>
-      </div>
-    </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Strategy &amp; Direction</span><span style="display:flex;gap:10px;align-items:center;"><span id="strategy-meta"></span><span class="chev">▾</span></span></div>
-      <div>
-        <div class="ff" style="margin-bottom:14px;">
-          <label style="display:block;margin-bottom:5px;">Your upgrade path / direction — guides every AI suggestion below</label>
-          <textarea id="deck-goal" rows="3" placeholder="e.g. Build around -1/-1 counters and go-wide +1/+1 counters for the TMNT upgrade path"></textarea>
-          <div style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-p owner-only" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button><span class="owner-only" style="font-size:11px;color:var(--text-dim);">then Regenerate below to apply it</span></div>
-          <div id="goal-summary" style="font-size:12px;color:var(--accent-b);margin-top:9px;font-style:italic;"></div>
-          <div class="owner-only" style="margin-top:10px;">
-            <button class="btn" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>
-            <span style="font-size:11px;color:var(--text-dim);margin-left:6px;">AI proposes 3 paths — pick one to make it active.</span>
-          </div>
-          <div id="directions-area" style="margin-top:10px;"></div>
-        </div>
-        <div id="strategy-area"></div>
-      </div>
-    </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Swap Suggestions (to buy)</span><span style="display:flex;gap:10px;align-items:center;"><span id="swaps-meta"></span><span class="chev">▾</span></span></div>
-      <div id="swaps-area"></div>
-    </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span style="color:var(--accent-p)">★ Recommended Swaps From Your Collection</span><span style="display:flex;gap:10px;align-items:center;"><span id="collection-meta"></span><span class="chev">▾</span></span></div>
-      <div id="collection-area"></div>
-    </div>
+    <!-- Card list sits directly under the overview, before the AI sections -->
     <div class="toolbar">
       <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Search cards…" oninput="filterDetail(this.value)"/></div>
       <select class="filter-sel" id="deck-sort" onchange="deckSort=this.value; var dd=STATE.decks.find(function(x){return x.id===currentDeckId;}); if(dd) renderDetailCards(dd);"><option value="">Sort: by type</option><option value="name">Name</option><option value="cmc">Mana value</option><option value="price">Price ↓</option></select>
@@ -614,6 +597,42 @@ main{padding:28px 32px;max-width:1200px;}
     </div>
     <div id="detail-countbar" style="margin-bottom:10px;font-family:'Fira Mono',monospace;font-size:14px;font-weight:600;"></div>
     <div id="detail-cards"></div>
+    <!-- AI-driven sections follow the card list; collapsed by default -->
+    <div class="analysis-box">
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>📊 Deck Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
+      <div>
+        <div class="owner-only" style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-p" id="analyze-btn" onclick="runAnalysis()" style="font-size:12px;padding:6px 12px;">⚙ Run AI tagging</button>
+          <span style="font-size:11px;color:var(--text-dim);">Tags every card by role, then computes the dashboard (~30s).</span>
+        </div>
+        <div id="analysis-dash"></div>
+      </div>
+    </div>
+    <div class="analysis-box">
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Strategy &amp; Direction</span><span style="display:flex;gap:10px;align-items:center;"><span id="strategy-meta"></span><span class="chev">▸</span></span></div>
+      <div style="display:none;">
+        <div class="ff" style="margin-bottom:14px;">
+          <label style="display:block;margin-bottom:5px;">Your upgrade path / direction — guides every AI suggestion below</label>
+          <textarea id="deck-goal" rows="3" placeholder="e.g. Build around -1/-1 counters and go-wide +1/+1 counters for the TMNT upgrade path"></textarea>
+          <div style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-p owner-only" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button><span class="owner-only" style="font-size:11px;color:var(--text-dim);">then Regenerate below to apply it</span></div>
+          <div id="goal-summary" style="font-size:12px;color:var(--accent-b);margin-top:9px;font-style:italic;"></div>
+          <div class="owner-only" style="margin-top:10px;">
+            <button class="btn" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>
+            <span style="font-size:11px;color:var(--text-dim);margin-left:6px;">AI proposes 3 paths — pick one to make it active.</span>
+          </div>
+          <div id="directions-area" style="margin-top:10px;"></div>
+        </div>
+        <div id="strategy-area"></div>
+      </div>
+    </div>
+    <div class="analysis-box">
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Swap Suggestions (to buy)</span><span style="display:flex;gap:10px;align-items:center;"><span id="swaps-meta"></span><span class="chev">▸</span></span></div>
+      <div id="swaps-area" style="display:none;"></div>
+    </div>
+    <div class="analysis-box">
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span style="color:var(--accent-p)">★ Recommended Swaps From Your Collection</span><span style="display:flex;gap:10px;align-items:center;"><span id="collection-meta"></span><span class="chev">▸</span></span></div>
+      <div id="collection-area" style="display:none;"></div>
+    </div>
   </div>
 </main>
 </div>
@@ -725,6 +744,8 @@ let rosterOwnerFilter = '';
 let buildDeckId = '';
 let looseSearch = '';
 let looseTypeFilter = '';
+let looseColorFilter = '';
+let looseSetFilter = '';
 let looseSort = '';
 let deckSort = '';
 let wishSearch = '';
@@ -807,6 +828,18 @@ function updatedLabel(cards, field) {
   const m = lastPriceUpdate(cards, field);
   return m ? 'Prices updated ' + fmtDate(m) : '';
 }
+// Single source of truth for "prices updated" — the latest update across the ENTIRE
+// collection, checking both field names ('pu' on loose/deck cards, 'priceUpdated' on for-sale).
+// Every section shows this same value so timestamps never disagree between tabs.
+function globalUpdatedLabel() {
+  let max = null;
+  const bump = (v) => { if (v && (!max || v > max)) max = v; };
+  STATE.loose.forEach((c) => { bump(c.pu); bump(c.priceUpdated); });
+  STATE.forsale.forEach((c) => { bump(c.pu); bump(c.priceUpdated); });
+  (STATE.wishlist || []).forEach((c) => { bump(c.pu); bump(c.priceUpdated); });
+  STATE.decks.forEach((d) => d.cards.forEach((c) => { bump(c.pu); bump(c.priceUpdated); }));
+  return max ? 'Prices updated ' + fmtDate(max) : '';
+}
 function sortCards(list, mode) {
   const arr = [...list];
   if (mode === 'name') arr.sort((a, b) => a.n.localeCompare(b.n));
@@ -863,6 +896,17 @@ function renderCollectionValue() {
   h += '<div class="val-card"><div class="val-card-title">Loose Cards</div><div class="val-card-num">' + money(looseVal) + '</div></div>';
   if (saleVal > 0) h += '<div class="val-card"><div class="val-card-title">For Sale (adj.)</div><div class="val-card-num">' + money(saleVal) + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px;">condition-adjusted</div></div>';
   if (wishVal > 0) h += '<div class="val-card"><div class="val-card-title">Wish List (mkt)</div><div class="val-card-num">' + money(wishVal) + '</div></div>';
+  // Gain / loss vs. what you paid — only over cards with a recorded acquisition price.
+  const withPaid = allCards().filter((c) => c.acq != null);
+  if (withPaid.length) {
+    const paid = withPaid.reduce((s, c) => s + c.acq * (c.q || 1), 0);
+    const mkt = withPaid.reduce((s, c) => s + (c.p != null ? c.p * (c.q || 1) : 0), 0);
+    const delta = mkt - paid;
+    const col = delta >= 0 ? 'var(--accent-g)' : 'var(--accent-r)';
+    h += '<div class="val-card"><div class="val-card-title">Gain / Loss</div>' +
+      '<div class="val-card-num" style="color:' + col + '">' + (delta >= 0 ? '+' : '−') + '$' + Math.abs(delta).toFixed(2) + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">vs. paid · ' + withPaid.length + ' card' + (withPaid.length !== 1 ? 's' : '') + ' recorded</div></div>';
+  }
   h += '</div>';
   el.innerHTML = h;
 }
@@ -969,15 +1013,23 @@ function computeBracketHTML(d) {
 
   if (!d.cards.length) return '';
 
-  let h = '<div class="analysis-section-label">Bracket Estimator (rule-based)</div>';
-  const aiLabel = d.power ? '<span style="font-size:11px;color:var(--text-muted);">· AI says: ' + bracketLabel(d.power) + '</span>' : '';
-  h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;"><span style="font-size:16px;font-weight:700;color:var(--accent-p)">' + bracketLabel(est) + '</span>' + aiLabel + '</div>';
+  let h = '<div class="analysis-section-label">Bracket</div>';
+  if (d.power) {
+    // AI rating is the source of truth once it exists; the rule-based number is a secondary estimate.
+    h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">' +
+      '<span style="font-size:16px;font-weight:700;color:var(--accent-p)">' + bracketLabel(d.power) + '</span>' +
+      '<span style="font-size:11px;color:var(--text-muted);">AI rating (shown above) · rule-based estimate: ' + bracketLabel(est) + '</span></div>';
+  } else {
+    h += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">' +
+      '<span style="font-size:16px;font-weight:700;color:var(--accent-p)">' + bracketLabel(est) + '</span>' +
+      '<span style="font-size:11px;color:var(--text-muted);">rule-based estimate</span></div>';
+  }
   if (all.length) {
     h += '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;">';
     all.forEach((n) => { h += '<span class="gc-chip">' + esc(n) + '</span>'; });
     h += '</div>';
   }
-  h += '<p style="font-size:11px;color:var(--text-muted);">Based on ' + all.length + ' game-changing card' + (all.length !== 1 ? 's' : '') + ' detected. Run AI analysis for a more nuanced rating.</p>';
+  h += '<p style="font-size:11px;color:var(--text-muted);">Based on ' + all.length + ' game-changing card' + (all.length !== 1 ? 's' : '') + ' detected.' + (d.power ? '' : ' Run AI analysis for a more nuanced rating.') + '</p>';
   return h;
 }
 
@@ -1115,8 +1167,9 @@ function drawSampleHand() {
   if (!el) return;
   el.innerHTML = hand.map((c) => {
     const isLand = c.t === 'Land';
+    const imgSrc = c.img || ('https://api.scryfall.com/cards/named?format=image&version=small&exact=' + encodeURIComponent(c.n));
     return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">' +
-      (c.img ? '<img src="' + esc(c.img) + '" style="width:28px;height:39px;object-fit:cover;border-radius:3px;border:1px solid var(--border);flex:0 0 auto;" loading="lazy"/>' : '<div style="width:28px;height:39px;background:var(--surface2);border-radius:3px;border:1px solid var(--border);flex:0 0 auto;"></div>') +
+      '<img src="' + esc(imgSrc) + '" style="width:28px;height:39px;object-fit:cover;border-radius:3px;border:1px solid var(--border);flex:0 0 auto;" loading="lazy" alt="" onerror="this.style.visibility=\'hidden\'"/>' +
       '<div style="flex:1;"><div style="font-size:13px;font-weight:' + (isLand ? '400' : '500') + ';color:' + (isLand ? 'var(--text-muted)' : 'var(--text)') + '">' + esc(c.n) + '</div>' +
       '<div style="font-size:11px;color:var(--text-muted);">' + (c.t || '') + manaSymbols(c.mc) + '</div></div></div>';
   }).join('');
@@ -1178,6 +1231,7 @@ async function moveWishToLoose(id) {
 
 // ── DB MIGRATION ──────────────────────────────────────
 async function runMigration() {
+  closeSettingsMenu();
   if (!confirm('Run DB migration to add new columns? This is safe to run multiple times.')) return;
   try {
     const r = await api('/api/migrate', { method: 'POST' });
@@ -1185,6 +1239,49 @@ async function runMigration() {
     const skip = r.results.filter((x) => !x.ok).length;
     toast('Migration done: ' + ok + ' added, ' + skip + ' already existed.');
   } catch (e) { toast('Migration: ' + e.message); }
+}
+
+// ── SETTINGS MENU / LOCK / CSV ────────────────────────
+function toggleSettingsMenu() {
+  const m = document.getElementById('settings-menu');
+  if (m) m.classList.toggle('show');
+}
+function closeSettingsMenu() {
+  const m = document.getElementById('settings-menu');
+  if (m) m.classList.remove('show');
+}
+// Close the settings menu when clicking anywhere else.
+document.addEventListener('click', (e) => {
+  const wrap = e.target.closest && e.target.closest('.settings-wrap');
+  if (!wrap) closeSettingsMenu();
+});
+function lockSite() {
+  closeSettingsMenu();
+  localStorage.removeItem('mtg_owner_key');
+  location.reload();
+}
+// Export the whole collection (decks + loose + for-sale + wishlist) as a CSV file.
+function exportCsv() {
+  closeSettingsMenu();
+  const rows = [['Name', 'Set', 'Qty', 'Location', 'Type', 'Condition', 'Foil', 'Market Price', 'Paid']];
+  const push = (c, location) => rows.push([
+    c.n, c.s || '', c.q, location, c.t || '',
+    c.cond || '', (c.foil && c.foil !== 'nonfoil') ? c.foil : '',
+    (c.price != null ? c.price : (c.p != null ? c.p : '')),
+    (c.acq != null ? c.acq : ''),
+  ]);
+  STATE.decks.forEach((d) => d.cards.forEach((c) => push(c, 'Deck: ' + d.title)));
+  STATE.loose.forEach((c) => push(c, 'Loose'));
+  STATE.forsale.forEach((c) => push(c, 'For Sale'));
+  (STATE.wishlist || []).forEach((c) => push(c, 'Wishlist'));
+  const csv = rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'barrington-mtg-collection.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  toast('Collection exported to CSV.');
 }
 
 // ── API ──────────────────────────────────────────────
@@ -1210,6 +1307,20 @@ function toast(msg) {
   t.classList.add('show');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// A toast with an Undo action, shown for ~6s. Used for delete-with-undo.
+let _undoEl = null;
+function showUndoToast(msg, onUndo) {
+  if (_undoEl) _undoEl.remove();
+  const el = document.createElement('div');
+  el.className = 'undo-toast';
+  el.innerHTML = '<span></span><button>Undo</button>';
+  el.querySelector('span').textContent = msg;
+  el.querySelector('button').onclick = () => { el.remove(); if (_undoEl === el) _undoEl = null; onUndo(); };
+  document.body.appendChild(el);
+  _undoEl = el;
+  setTimeout(() => { if (el.parentNode) el.remove(); if (_undoEl === el) _undoEl = null; }, 6000);
 }
 
 // ── INIT ─────────────────────────────────────────────
@@ -1272,10 +1383,15 @@ function setChip(mode) {
 // ── LOAD + RENDER CURRENT VIEW ───────────────────────
 async function load() {
   STATE = await api('/api/state');
+  renderAll();
+}
+// Re-render every view from the current in-memory STATE (no network fetch).
+function renderAll() {
   renderStats();
   buildGrid();
   renderLoose();
   renderSale();
+  if (currentView === 'wishlist') renderWishlist();
   if (currentView === 'detail' && currentDeckId) {
     const d = STATE.decks.find((x) => x.id === currentDeckId);
     if (d) renderDetail(d);
@@ -1283,11 +1399,8 @@ async function load() {
 }
 
 function renderStats() {
-  document.getElementById('s-decks').textContent = STATE.decks.length;
-  document.getElementById('s-loose').textContent = STATE.loose.reduce((s, c) => s + c.q, 0);
-  document.getElementById('s-sale').textContent = STATE.forsale.length;
   const hu = document.getElementById('home-updated');
-  if (hu) hu.textContent = updatedLabel(STATE.loose.concat(...STATE.decks.map((d) => d.cards)));
+  if (hu) hu.textContent = globalUpdatedLabel();
   updateValue();
   renderCollectionValue();
 }
@@ -1643,7 +1756,9 @@ function buildGrid() {
     const ownerBadge = d.owner ? `<span class="owner-badge owner-${d.owner.toLowerCase()}">${d.owner}</span>` : '';
     const div = document.createElement('div');
     div.className = 'deck-card ' + d.theme;
+    const artUrl = 'https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=' + encodeURIComponent(d.commander);
     div.innerHTML = `
+      <img class="deck-art" loading="lazy" alt="" src="${artUrl}" onerror="this.remove()">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div class="deck-title">${esc(d.title)}</div>${ownerBadge}
       </div>
@@ -1695,14 +1810,14 @@ function renderDetail(d) {
   const osel = document.getElementById('d-owner-sel');
   if (osel) osel.value = d.owner || '';
   const du = document.getElementById('deck-updated');
-  if (du) du.textContent = updatedLabel(d.cards);
+  if (du) du.textContent = globalUpdatedLabel();
   renderDetailCards(d);
   renderBreakdown(d);
 }
 
 function moveSelect(cardId, curDeckId) {
   if (READONLY) return '';
-  let opts = '<option value="">⇄</option>';
+  let opts = '<option value="">⇄ Move to…</option>';
   if (curDeckId !== 'loose') opts += '<option value="loose">📦 Loose Cards</option>';
   STATE.decks.forEach((d) => { if (d.id !== curDeckId) opts += `<option value="${d.id}">${esc(d.title)}</option>`; });
   return `<select class="move-sel owner-only" title="Move to…" onchange="moveCard(${cardId}, this.value); this.selectedIndex=0;">${opts}</select>`;
@@ -1859,7 +1974,7 @@ function manaAnalysisHTML(d) {
   });
   html += '</div>';
 
-  html += manaCurveHTML(d);
+  // Mana curve lives in the Deck Analysis dashboard (with early-play counts), not here — avoids two curves.
   return html;
 }
 
@@ -1914,12 +2029,20 @@ function populateLooseTypeFilter() {
   sel.innerHTML = '<option value="">All types</option>' +
     present.map((t) => `<option value="${t}" ${t === looseTypeFilter ? 'selected' : ''}>${t}</option>`).join('');
 }
+function populateLooseSetFilter() {
+  const sel = document.getElementById('loose-set');
+  if (!sel) return;
+  const sets = [...new Set(STATE.loose.map((c) => c.s).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All sets</option>' +
+    sets.map((s) => `<option value="${esc(s)}" ${s === looseSetFilter ? 'selected' : ''}>${esc(s)}</option>`).join('');
+}
 
 function renderLoose() {
   const tbody = document.querySelector('#tbl-loose tbody');
   const lu = document.getElementById('loose-updated');
-  if (lu) lu.textContent = updatedLabel(STATE.loose);
+  if (lu) lu.textContent = globalUpdatedLabel();
   populateLooseTypeFilter();
+  populateLooseSetFilter();
   enableColResize('tbl-loose');
   tbody.innerHTML = '';
   if (STATE.loose.length === 0) {
@@ -1927,10 +2050,15 @@ function renderLoose() {
     return;
   }
   const q = looseSearch.toLowerCase();
-  let list = STATE.loose.filter((c) =>
-    (!looseTypeFilter || (c.t || 'Uncategorized') === looseTypeFilter) &&
-    (c.n + ' ' + (c.s || '')).toLowerCase().includes(q)
-  );
+  let list = STATE.loose.filter((c) => {
+    if (looseTypeFilter && (c.t || 'Uncategorized') !== looseTypeFilter) return false;
+    if (looseSetFilter && c.s !== looseSetFilter) return false;
+    if (looseColorFilter) {
+      const cols = colorsToPips(c.mc); // [] means colorless
+      if (looseColorFilter === 'c' ? cols.length !== 0 : !cols.includes(looseColorFilter)) return false;
+    }
+    return (c.n + ' ' + (c.s || '')).toLowerCase().includes(q);
+  });
   list = sortCards(list, looseSort);
   if (list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><p>No cards match this filter.</p></div></td></tr>`;
@@ -1963,7 +2091,7 @@ function renderLoose() {
 function renderSale() {
   const tbody = document.querySelector('#tbl-sale tbody');
   const su = document.getElementById('sale-updated');
-  if (su) su.textContent = updatedLabel(STATE.forsale, 'priceUpdated');
+  if (su) su.textContent = globalUpdatedLabel();
   enableColResize('tbl-sale');
   tbody.innerHTML = '';
   if (STATE.forsale.length === 0) {
@@ -2037,10 +2165,32 @@ async function addSale() {
     toast('Card listed for sale.');
   } catch (e) { toast(e.message); }
 }
+const pendingDeletes = {};
+// Splice a card out of every in-memory collection so the UI updates instantly.
+function removeCardFromState(id) {
+  STATE.loose = STATE.loose.filter((c) => c.id !== id);
+  STATE.forsale = STATE.forsale.filter((c) => c.id !== id);
+  if (STATE.wishlist) STATE.wishlist = STATE.wishlist.filter((c) => c.id !== id);
+  STATE.decks.forEach((d) => { d.cards = d.cards.filter((c) => c.id !== id); });
+}
 async function removeCard(id) {
-  if (!confirm('Remove this card?')) return;
-  try { await api('/api/cards/' + id, { method: 'DELETE' }); await load(); maybeRefreshNumbers(); toast('Removed.'); }
-  catch (e) { toast(e.message); }
+  const c = findCard(id);
+  const name = c ? c.n : 'Card';
+  // Optimistically remove and re-render; the real DELETE fires after a 6s undo window.
+  removeCardFromState(id);
+  renderAll();
+  maybeRefreshNumbers();
+  showUndoToast('“' + name + '” removed.', async () => {
+    clearTimeout(pendingDeletes[id]);
+    delete pendingDeletes[id];
+    await load(); // restore truth from the server
+    maybeRefreshNumbers();
+  });
+  pendingDeletes[id] = setTimeout(async () => {
+    delete pendingDeletes[id];
+    try { await api('/api/cards/' + id, { method: 'DELETE' }); }
+    catch (e) { toast(e.message); await load(); maybeRefreshNumbers(); }
+  }, 6000);
 }
 let editingCardId = null;
 function editCard(id) {
@@ -2267,10 +2417,21 @@ function swapCard(s, cls) {
   const addRight = s.p
     ? '<span class="swap-type ' + cls + '" style="color:inherit">' + esc(s.p) + '</span>'
     : typeRight(s.i);
+  const wantBtn = READONLY ? '' :
+    '<div class="swap-line" style="margin-top:5px;"><button class="btn" data-want="' + esc(s.i) + '" onclick="wishlistAdd(this.dataset.want)" style="font-size:11px;padding:4px 10px;">📋 Want it</button></div>';
   return '<div class="swap-card">' +
     '<div class="swap-line">' + swapMain('swap-add', '＋ Add', s.i) + addRight + '</div>' +
     '<div class="swap-line">' + swapMain('swap-cut', '－ Cut', s.o) + typeRight(s.o) + '</div>' +
-    '<div class="swap-reason">' + esc(s.r) + '</div></div>';
+    '<div class="swap-reason">' + esc(s.r) + '</div>' + wantBtn + '</div>';
+}
+// Add a named card straight to the wish list (used by AI swap suggestions).
+async function wishlistAdd(name) {
+  if (!name) return;
+  try {
+    await api('/api/cards', { method: 'POST', body: { location: 'wishlist', name, qty: 1 } });
+    await load();
+    toast('“' + name + '” added to your wish list.');
+  } catch (e) { toast(e.message); }
 }
 function ownedSwapCard(s) {
   const hasCut = s.o && String(s.o).trim();

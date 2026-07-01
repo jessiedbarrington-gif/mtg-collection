@@ -122,6 +122,20 @@ POST /api/refreshAll               → full collection price refresh (chunked)
 - For Sale: condition-adjusted + foil-aware pricing
 - Foil / condition / acquisition price fields on cards
 - Mobile responsive layout
+- Commander art thumbnails on deck cards (faint Scryfall art_crop behind text)
+- Gain/Loss stat card (market vs. recorded acquisition price)
+- Full-collection CSV export (Settings gear menu)
+- Lock / log-out button (clears owner key from browser)
+- Undo-toast on card delete (6s optimistic delete window)
+- "Want it" buttons on AI buy-swap suggestions (add to wishlist)
+- Loose Cards color + set filters
+- Settings gear menu (Export CSV, DB Migrate, Lock)
+- Deck page order: overview → card list → AI sections (Strategy/Swaps/Recommended collapsed by default)
+- Unified "Prices updated" timestamp across all tabs (globalUpdatedLabel)
+- Sample-hand cards fall back to Scryfall images when no stored image
+
+## Known deferred work
+- **Retire "Build a Deck" tab (guide §4.1):** NOT done. The deck-page "Add from loose" button calls `openBuild()`, which switches to the Build tab — so the tab can't be removed without first reworking add-from-loose into a standalone modal. Do that rework before retiring the tab.
 
 ## Deck Analysis Numbers (computeNumbers)
 Reads `roles` JSON from cards. Role vocab (18 tags): `ramp`, `card-draw`, `tutor`, `removal`, `wipe`, `counter`, `land`, `commander-synergy`, `protection`, `reanimation`, `graveyard`, `token`, `combo-piece`, `value-engine`, `hate`, `beater`, `utility`, `filler`.
