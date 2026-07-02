@@ -133,9 +133,13 @@ POST /api/refreshAll               → full collection price refresh (chunked)
 - Deck page order: overview → card list → AI sections (Strategy/Swaps/Recommended collapsed by default)
 - Unified "Prices updated" timestamp across all tabs (globalUpdatedLabel)
 - Sample-hand cards fall back to Scryfall images when no stored image
+- Build tab retired: AI "Draft a deck" now lives on the Collection page (toggle `form-aidraft`); "Add from loose" is a modal (`build-modal`, opened by `openBuild(deckId)`) instead of a tab
+- Bulk actions on Loose Cards (checkbox column + `loose-bulk-bar`): multi-select → Move to deck / List for sale
+- Per-row ⋯ kebab menu on Loose Cards (`row-kebab`/`row-menu`, fixed-positioned) — Move/List/Edit/Delete; star stays a one-tap toggle
+- Inline SVG nav icons (`.nav-ico`) replacing emoji
 
-## Known deferred work
-- **Retire "Build a Deck" tab (guide §4.1):** NOT done. The deck-page "Add from loose" button calls `openBuild()`, which switches to the Build tab — so the tab can't be removed without first reworking add-from-loose into a standalone modal. Do that rework before retiring the tab.
+## Guide status
+The full site-improvement guide (§2–§5, including §4.1/§3.7/§5.2/§5.6) has been applied. Nothing outstanding.
 
 ## Deck Analysis Numbers (computeNumbers)
 Reads `roles` JSON from cards. Role vocab (18 tags): `ramp`, `card-draw`, `tutor`, `removal`, `wipe`, `counter`, `land`, `commander-synergy`, `protection`, `reanimation`, `graveyard`, `token`, `combo-piece`, `value-engine`, `hate`, `beater`, `utility`, `filler`.

@@ -29,7 +29,8 @@ header{padding:32px;border-bottom:1px solid var(--border);display:flex;align-ite
 .stat-num{font-family:'Fira Mono',monospace;font-size:20px;font-weight:500;color:var(--accent-b);}
 .stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;}
 nav{display:flex;gap:2px;padding:0 32px;border-bottom:1px solid var(--border);overflow-x:auto;}
-.tab{padding:13px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif;transition:color .15s,border-color .15s;}
+.tab{padding:13px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif;transition:color .15s,border-color .15s;display:inline-flex;align-items:center;gap:7px;}
+.nav-ico{width:16px;height:16px;flex:0 0 auto;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--text);border-bottom-color:var(--accent-b);}
 main{padding:28px 32px;max-width:1200px;}
@@ -276,6 +277,13 @@ main{padding:28px 32px;max-width:1200px;}
 .settings-menu.show{display:block;}
 .settings-menu button{display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;border-radius:6px;}
 .settings-menu button:hover{background:var(--surface);}
+.bulk-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--accent-b);border-radius:8px;padding:9px 14px;margin-bottom:10px;}
+.row-kebab{position:relative;display:inline-block;}
+.row-menu{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:180px;box-shadow:0 8px 24px #0009;z-index:80;}
+.row-menu.show{display:block;}
+.row-menu button{display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;border-radius:6px;}
+.row-menu button:hover{background:var(--surface);}
+.row-menu .move-sel{width:100%;margin-bottom:4px;}
 @media(max-width:600px){
   header{padding:18px 14px;}
   nav{padding:0 14px;}
@@ -369,12 +377,11 @@ main{padding:28px 32px;max-width:1200px;}
   </div>
 </header>
 <nav>
-  <button class="tab active" data-tab="home" onclick="showTab('home')">🏠 Collection</button>
-  <button class="tab" data-tab="roster" onclick="showTab('roster')">👑 Commanders</button>
-  <button class="tab" data-tab="build" onclick="showTab('build')">🛠 Build a Deck</button>
-  <button class="tab" data-tab="loose" onclick="showTab('loose')">📦 Loose Cards</button>
-  <button class="tab" data-tab="forsale" onclick="showTab('forsale')">💰 For Sale</button>
-  <button class="tab" data-tab="wishlist" onclick="showTab('wishlist')">📋 Wish List</button>
+  <button class="tab active" data-tab="home" onclick="showTab('home')"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>Collection</button>
+  <button class="tab" data-tab="roster" onclick="showTab('roster')"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.5 4L12 4l5.5 7L22 7l-2 12H4z"/></svg>Commanders</button>
+  <button class="tab" data-tab="loose" onclick="showTab('loose')"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 8 4.5v9L12 20l-8-4.5v-9z"/><path d="m12 2 8 4.5-8 4.5-8-4.5z"/><path d="M12 11v9"/></svg>Loose Cards</button>
+  <button class="tab" data-tab="forsale" onclick="showTab('forsale')"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.2a2.5 2 0 0 1 5-.2M14.5 14.8a2.5 2 0 0 1-5 .2"/></svg>For Sale</button>
+  <button class="tab" data-tab="wishlist" onclick="showTab('wishlist')"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M8 6H6v14h12V6h-2"/><path d="m9.5 13 1.5 1.5 3-3"/></svg>Wish List</button>
 </nav>
 <main>
   <!-- HOME -->
@@ -401,7 +408,25 @@ main{padding:28px 32px;max-width:1200px;}
         <option value="Jessie">Jessie's</option>
         <option value="Marcus">Marcus's</option>
       </select>
-      <button class="btn btn-p owner-only" style="margin-left:auto;" onclick="toggleForm('form-newdeck')">+ New Deck</button>
+      <button class="btn owner-only" style="margin-left:auto;" onclick="toggleForm('form-aidraft')">🧙 Draft a deck (AI)</button>
+      <button class="btn btn-p owner-only" onclick="toggleForm('form-newdeck')">+ New Deck</button>
+    </div>
+    <div class="add-form owner-only" id="form-aidraft" style="flex-direction:column;align-items:stretch;">
+      <div class="analysis-title" style="margin-bottom:8px;">🧙 Describe a deck and I'll draft it</div>
+      <textarea id="bi-concept" rows="3" placeholder="e.g. A dog-themed commander that casts a ton of spells, mid power"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="bi-bracket" class="filter-sel">
+          <option value="">Any power level</option>
+          <option value="1">Bracket 1 · Exhibition</option>
+          <option value="2">Bracket 2 · Core</option>
+          <option value="3">Bracket 3 · Upgraded</option>
+          <option value="4">Bracket 4 · Optimized</option>
+          <option value="5">Bracket 5 · cEDH</option>
+        </select>
+        <button class="btn btn-p" id="bi-gen" onclick="genBuildIdea()">✨ Draft my deck (AI)</button>
+        <button class="btn" onclick="toggleForm('form-aidraft')">Cancel</button>
+      </div>
+      <div id="bi-result" style="margin-top:12px;"></div>
     </div>
     <div class="add-form owner-only" id="form-newdeck">
       <div class="ff" style="flex:1"><label>Deck Name</label><input type="text" id="nd-title" placeholder="e.g. Mardu Surge"/></div>
@@ -438,51 +463,6 @@ main{padding:28px 32px;max-width:1200px;}
     </div>
     <div class="roster-grid" id="roster-grid"></div>
   </div>
-  <!-- BUILD A DECK -->
-  <div class="section" id="section-build">
-    <div class="sec-title">🛠 Build a Deck</div>
-    <div class="sec-desc">Choose a deck (or create one), then search your loose cards and add them straight in.</div>
-    <div class="analysis-box owner-only" style="margin-bottom:18px;">
-      <div class="analysis-title">🧙 Describe a deck and I'll draft it</div>
-      <textarea id="bi-concept" rows="3" placeholder="e.g. A dog-themed commander that casts a ton of spells, mid power"></textarea>
-      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="bi-bracket" class="filter-sel">
-          <option value="">Any power level</option>
-          <option value="1">Bracket 1 · Exhibition</option>
-          <option value="2">Bracket 2 · Core</option>
-          <option value="3">Bracket 3 · Upgraded</option>
-          <option value="4">Bracket 4 · Optimized</option>
-          <option value="5">Bracket 5 · cEDH</option>
-        </select>
-        <button class="btn btn-p" id="bi-gen" onclick="genBuildIdea()">✨ Draft my deck (AI)</button>
-      </div>
-      <div id="bi-result" style="margin-top:12px;"></div>
-    </div>
-    <div class="toolbar" style="margin-bottom:14px;flex-wrap:wrap;">
-      <span style="font-size:12px;color:var(--text-muted);align-self:center;">Building into:</span>
-      <select class="filter-sel" id="build-deck" onchange="selectBuildDeck(this.value)" style="min-width:170px;"></select>
-      <button class="btn btn-p owner-only" onclick="toggleForm('form-build-newdeck')">+ New deck</button>
-    </div>
-    <div class="add-form owner-only" id="form-build-newdeck">
-      <div class="ff" style="flex:1"><label>Deck Name</label><input type="text" id="bd-title" placeholder="e.g. Mardu Tokens"/></div>
-      <div class="ff" style="flex:1"><label>Commander</label><input type="text" id="bd-cmdr" placeholder="Commander name"/></div>
-      <div class="ff"><label>Owner</label><select class="filter-sel" id="bd-owner" style="min-width:120px;"><option value="">Unassigned</option><option value="Jessie">Jessie</option><option value="Marcus">Marcus</option></select></div>
-      <div class="ff"><label>Colors</label><div id="bd-colors" class="color-row">
-        <button type="button" class="color-btn cb-w" data-c="w" onclick="this.classList.toggle('sel')">W</button>
-        <button type="button" class="color-btn cb-u" data-c="u" onclick="this.classList.toggle('sel')">U</button>
-        <button type="button" class="color-btn cb-k" data-c="k" onclick="this.classList.toggle('sel')">B</button>
-        <button type="button" class="color-btn cb-r" data-c="r" onclick="this.classList.toggle('sel')">R</button>
-        <button type="button" class="color-btn cb-g" data-c="g" onclick="this.classList.toggle('sel')">G</button>
-      </div></div>
-      <div class="fa"><button class="btn btn-p" onclick="createBuildDeck()">Create &amp; build</button><button class="btn" onclick="toggleForm('form-build-newdeck')">Cancel</button></div>
-    </div>
-    <div id="build-empty" class="empty"><div class="empty-icon">🛠</div><p>Pick a deck above (or create one) to start adding loose cards.</p></div>
-    <div id="build-body" style="display:none;">
-      <div id="build-info" style="margin-bottom:12px;"></div>
-      <div class="toolbar"><div class="search-wrap" style="flex:1"><span class="si">🔍</span><input type="text" id="build-search" placeholder="Search your loose cards to add…" oninput="renderBuildResults()"/></div></div>
-      <div class="table-wrap"><table class="card-table" id="tbl-build"><thead><tr><th>Have</th><th>Card Name</th><th>Type</th><th>Price</th><th></th></tr></thead><tbody></tbody></table></div>
-    </div>
-  </div>
   <!-- LOOSE -->
   <div class="section" id="section-loose">
     <div class="sec-title" style="color:var(--accent-b)">Loose Cards</div>
@@ -509,7 +489,14 @@ main{padding:28px 32px;max-width:1200px;}
       <div class="ff" style="flex:1"><label>Paste a list — one card per line, e.g. "1 Sol Ring [LCC]"</label><textarea id="paste-loose" rows="8" placeholder="1 Sol Ring [LCC]&#10;2 Counterspell [DSC]&#10;1 Llanowar Elves"></textarea></div>
       <div class="fa"><button class="btn btn-p" onclick="importToLoose()">Import</button><button class="btn" onclick="toggleForm('form-loose-paste')">Cancel</button></div>
     </div>
-    <div class="table-wrap"><table class="card-table" id="tbl-loose"><thead><tr><th>Qty</th><th>Card Name</th><th>Set</th><th>Type</th><th>Price</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="bulk-bar owner-only" id="loose-bulk-bar" style="display:none;">
+      <span id="loose-bulk-count" style="font-weight:600;"></span>
+      <select class="filter-sel" id="loose-bulk-deck" style="min-width:170px;"><option value="">Move to deck…</option></select>
+      <button class="btn btn-p" onclick="bulkMoveToDeck()">Move</button>
+      <button class="btn" onclick="bulkListForSale()">🏷️ List for sale</button>
+      <button class="btn" onclick="clearLooseSelection()">Clear</button>
+    </div>
+    <div class="table-wrap"><table class="card-table" id="tbl-loose"><thead><tr><th style="width:28px;"><input type="checkbox" id="loose-check-all" onchange="toggleAllLoose(this.checked)" title="Select all"/></th><th>Qty</th><th>Card Name</th><th>Set</th><th>Type</th><th>Price</th><th></th></tr></thead><tbody></tbody></table></div>
   </div>
   <!-- FOR SALE -->
   <div class="section" id="section-forsale">
@@ -724,6 +711,22 @@ main{padding:28px 32px;max-width:1200px;}
       <button class="btn btn-p" onclick="drawSampleHand()">Draw again</button>
       <button class="btn" onclick="closeHandModal()">Close</button>
     </div>
+  </div>
+</div>
+<div class="modal-backdrop" id="build-modal">
+  <div class="modal" style="max-width:640px;">
+    <h3>📦 Add cards from your loose pile</h3>
+    <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text-muted);align-self:center;">Adding into:</span>
+      <select class="filter-sel" id="build-deck" onchange="selectBuildDeck(this.value)" style="min-width:180px;"></select>
+    </div>
+    <div id="build-info" style="margin-bottom:12px;"></div>
+    <div id="build-empty" class="empty" style="display:none;"><div class="empty-icon">📦</div><p>Choose a deck above to start adding loose cards.</p></div>
+    <div id="build-body" style="display:none;">
+      <div class="toolbar"><div class="search-wrap" style="flex:1"><span class="si">🔍</span><input type="text" id="build-search" placeholder="Search your loose cards to add…" oninput="renderBuildResults()"/></div></div>
+      <div class="table-wrap" style="max-height:46vh;overflow:auto;"><table class="card-table" id="tbl-build"><thead><tr><th>Have</th><th>Card Name</th><th>Type</th><th>Price</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="fa" style="display:flex;justify-content:flex-end;margin-top:14px;"><button class="btn" onclick="closeBuildModal()">Close</button></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1423,7 +1426,6 @@ function showTab(name) {
   document.querySelectorAll('.section').forEach((s) => s.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');
   if (name === 'roster') renderRoster();
-  if (name === 'build') renderBuild();
   if (name === 'wishlist') renderWishlist();
 }
 
@@ -1530,8 +1532,8 @@ function renderBuildInfo() {
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">' +
     '<div><b style="font-size:15px;">' + esc(d.title) + '</b> <span style="color:var(--text-muted);font-size:12px;">' + esc(d.commander) + '</span> ' + pipHTML(d.pips) + '</div>' +
     '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span style="font-family:\'Fira Mono\',monospace;font-weight:700;color:' + cls + '">' + total + ' / 100</span>' +
-    '<button class="btn btn-p" style="font-size:12px;padding:5px 11px;" onclick="openScanModal({location:\'deck\',deckId:\'' + d.id + '\'})">📷 Scan in</button>' +
-    '<button class="btn" style="font-size:12px;padding:5px 11px;" onclick="openDeck(\'' + d.id + '\')">Open deck →</button></div></div>';
+    '<button class="btn btn-p" style="font-size:12px;padding:5px 11px;" onclick="closeBuildModal(); openScanModal({location:\'deck\',deckId:\'' + d.id + '\'})">📷 Scan in</button>' +
+    '<button class="btn" style="font-size:12px;padding:5px 11px;" onclick="closeBuildModal(); openDeck(\'' + d.id + '\')">Open deck →</button></div></div>';
 }
 function renderBuildResults() {
   const tbody = document.querySelector('#tbl-build tbody');
@@ -1560,28 +1562,13 @@ async function addToBuild(cardId) {
     toast('Added 1 to the deck.');
   } catch (e) { toast(e.message); }
 }
-async function createBuildDeck() {
-  const title = document.getElementById('bd-title').value.trim();
-  if (!title) { toast('Enter a deck name.'); return; }
-  const commander = document.getElementById('bd-cmdr').value.trim();
-  const pips = [...document.querySelectorAll('#bd-colors .color-btn.sel')].map((b) => b.dataset.c);
-  const owner = document.getElementById('bd-owner').value;
-  try {
-    const r = await api('/api/decks', { method: 'POST', body: { title, commander, pips, owner } });
-    document.getElementById('bd-title').value = '';
-    document.getElementById('bd-cmdr').value = '';
-    document.getElementById('bd-owner').value = '';
-    document.querySelectorAll('#bd-colors .color-btn.sel').forEach((b) => b.classList.remove('sel'));
-    toggleForm('form-build-newdeck');
-    await load();
-    buildDeckId = r.id;
-    renderBuild();
-    toast('Deck created — now search your loose cards to add them.');
-  } catch (e) { toast(e.message); }
-}
 function openBuild(deckId) {
-  showTab('build');
-  selectBuildDeck(deckId);
+  renderBuild();            // populate the deck picker from current STATE
+  selectBuildDeck(deckId);  // target this deck + render its add-list
+  document.getElementById('build-modal').classList.add('open');
+}
+function closeBuildModal() {
+  document.getElementById('build-modal').classList.remove('open');
 }
 
 // ── CARD SCANNER ─────────────────────────────────────
@@ -2043,10 +2030,12 @@ function renderLoose() {
   if (lu) lu.textContent = globalUpdatedLabel();
   populateLooseTypeFilter();
   populateLooseSetFilter();
+  populateBulkDeckPicker();
   enableColResize('tbl-loose');
   tbody.innerHTML = '';
+  clearLooseSelection();
   if (STATE.loose.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📦</div><p>No loose cards.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><p>No loose cards.</p></div></td></tr>`;
     return;
   }
   const q = looseSearch.toLowerCase();
@@ -2061,7 +2050,7 @@ function renderLoose() {
   });
   list = sortCards(list, looseSort);
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><p>No cards match this filter.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><p>No cards match this filter.</p></div></td></tr>`;
     return;
   }
   list.forEach((c) => {
@@ -2070,22 +2059,104 @@ function renderLoose() {
     const pcBtn = (c.t === 'Creature' || c.t === 'Planeswalker')
       ? `<button class="rowbtn owner-only" title="${c.pc ? 'Remove from commander roster' : 'Flag as potential commander'}" onclick='togglePotentialCommander(${c.id}, ${c.pc ? 1 : 0})'>${c.pc ? '👑' : '⭐'}</button>`
       : '';
-    const actions = READONLY ? '' :
+    // Star stays a one-tap toggle; everything else collapses into a ⋯ kebab menu.
+    const kebab = READONLY ? '' :
+      `<span class="row-kebab">` +
+      `<button class="rowbtn owner-only" title="More actions" onclick="event.stopPropagation(); toggleRowMenu(this)">⋯</button>` +
+      `<div class="row-menu">` +
       moveSelect(c.id, 'loose') +
-      pcBtn +
-      `<button class="rowbtn owner-only" title="${c.fs ? 'Unlist from sale' : 'List for sale'}" onclick='toggleSale(${c.id}, ${c.fs})'>${c.fs ? '🏷️' : '$'}</button>` +
-      `<button class="rowbtn owner-only" title="Edit" onclick='editCard(${c.id})'>✎</button>` +
-      `<button class="rowbtn del owner-only" title="Remove" onclick='removeCard(${c.id})'>✕</button>`;
+      `<button onclick="toggleSale(${c.id}, ${c.fs}); closeRowMenus()">${c.fs ? '🏷️ Unlist from sale' : '$ List for sale'}</button>` +
+      `<button onclick="editCard(${c.id}); closeRowMenus()">✎ Edit</button>` +
+      `<button onclick="removeCard(${c.id}); closeRowMenus()" style="color:var(--accent-r)">✕ Delete</button>` +
+      `</div></span>`;
+    const check = READONLY ? '<td></td>' : `<td><input type="checkbox" class="loose-check" data-id="${c.id}" onchange="updateBulkBar()"/></td>`;
     tr.innerHTML =
+      check +
       `<td><span class="cq ${c.q > 1 ? 'cq2' : ''}">${c.q}</span></td>` +
       `<td class="cn"><a class="card-link" href="${tcgURL(c.n)}" target="_blank" rel="noopener"${c.img ? ' data-img="' + esc(c.img) + '"' : ''}>${esc(c.n)}</a>${manaSymbols(c.mc)}${badge}</td>` +
       `<td>${c.s ? '<span class="cs">' + esc(c.s) + '</span>' : ''}</td>` +
       `<td style="color:var(--text-muted);font-size:12px;">${c.t || '—'}</td>` +
       `<td><span class="cp">${money(c.p)}</span></td>` +
-      `<td style="text-align:right;white-space:nowrap;">${actions}</td>`;
+      `<td style="text-align:right;white-space:nowrap;">${pcBtn}${kebab}</td>`;
     tbody.appendChild(tr);
   });
 }
+// ── LOOSE: bulk selection + row kebab ─────────────────
+function populateBulkDeckPicker() {
+  const sel = document.getElementById('loose-bulk-deck');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Move to deck…</option>' +
+    STATE.decks.map((d) => `<option value="${d.id}">${esc(d.title)}</option>`).join('');
+}
+function checkedLooseIds() {
+  return [...document.querySelectorAll('.loose-check:checked')].map((el) => parseInt(el.dataset.id, 10));
+}
+function updateBulkBar() {
+  const ids = checkedLooseIds();
+  const bar = document.getElementById('loose-bulk-bar');
+  const cnt = document.getElementById('loose-bulk-count');
+  if (!bar) return;
+  bar.style.display = ids.length ? 'flex' : 'none';
+  if (cnt) cnt.textContent = ids.length + ' selected';
+  const all = document.getElementById('loose-check-all');
+  const boxes = document.querySelectorAll('.loose-check');
+  if (all) all.checked = boxes.length > 0 && ids.length === boxes.length;
+}
+function toggleAllLoose(on) {
+  document.querySelectorAll('.loose-check').forEach((el) => { el.checked = on; });
+  updateBulkBar();
+}
+function clearLooseSelection() {
+  document.querySelectorAll('.loose-check').forEach((el) => { el.checked = false; });
+  const all = document.getElementById('loose-check-all');
+  if (all) all.checked = false;
+  const bar = document.getElementById('loose-bulk-bar');
+  if (bar) bar.style.display = 'none';
+}
+async function bulkMoveToDeck() {
+  const deckId = document.getElementById('loose-bulk-deck').value;
+  if (!deckId) { toast('Pick a deck to move into.'); return; }
+  const ids = checkedLooseIds();
+  if (!ids.length) return;
+  let ok = 0;
+  for (const id of ids) {
+    try { await api('/api/cards/' + id + '/move', { method: 'POST', body: { location: 'deck', deckId } }); ok++; } catch (_) {}
+  }
+  await load();
+  maybeRefreshNumbers();
+  toast('Moved ' + ok + ' card' + (ok === 1 ? '' : 's') + ' into the deck.');
+}
+async function bulkListForSale() {
+  const ids = checkedLooseIds();
+  if (!ids.length) return;
+  let ok = 0;
+  for (const id of ids) {
+    const c = STATE.loose.find((x) => x.id === id);
+    if (c && c.fs) continue; // already listed
+    try { await api('/api/cards/' + id, { method: 'PATCH', body: { forSale: true } }); ok++; } catch (_) {}
+  }
+  await load();
+  toast('Listed ' + ok + ' card' + (ok === 1 ? '' : 's') + ' for sale.');
+}
+// Per-row kebab menu (fixed-positioned so it never clips inside the scrolling table).
+let openRowMenu = null;
+function toggleRowMenu(btn) {
+  const menu = btn.nextElementSibling;
+  if (openRowMenu === menu) { closeRowMenus(); return; }
+  closeRowMenus();
+  const r = btn.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.top = (r.bottom + 4) + 'px';
+  menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+  menu.classList.add('show');
+  openRowMenu = menu;
+}
+function closeRowMenus() {
+  if (openRowMenu) { openRowMenu.classList.remove('show'); openRowMenu = null; }
+}
+document.addEventListener('click', (e) => {
+  if (!(e.target.closest && e.target.closest('.row-kebab'))) closeRowMenus();
+});
 
 // ── FOR SALE ─────────────────────────────────────────
 function renderSale() {
