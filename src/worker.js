@@ -1071,7 +1071,12 @@ async function tagDeck(env, deckId) {
   }
   for (let i = 0; i < updates.length; i += 100) await env.DB.batch(updates.slice(i, i + 100));
   const now = new Date().toISOString();
-  await env.DB.prepare("UPDATE decks SET tagged_at = ?, tag_sig = ? WHERE id = ?").bind(now, sig, deckId).run();
+  try {
+    await env.DB.prepare("UPDATE decks SET tagged_at = ?, tag_sig = ? WHERE id = ?").bind(now, sig, deckId).run();
+  } catch (_) {
+    // tag_sig column not migrated yet — still record tagged_at so tagging succeeds (caching kicks in post-migrate).
+    await env.DB.prepare("UPDATE decks SET tagged_at = ? WHERE id = ?").bind(now, deckId).run();
+  }
   return json({ ok: true, tagged: matched.size, total: cards.length, taggedAt: now });
 }
 
@@ -1471,9 +1476,15 @@ async function generateAnalysis(env, deckId) {
 
   // Skip the AI call entirely if the decklist + direction haven't changed since the last analysis.
   const sig = analysisSig(cards, deck);
-  const existingRow = await env.DB.prepare(
-    "SELECT content, analysis_sig, model, generated_at FROM analysis WHERE deck_id = ?"
-  ).bind(deckId).first();
+  let existingRow = null;
+  try {
+    existingRow = await env.DB.prepare(
+      "SELECT content, analysis_sig, model, generated_at FROM analysis WHERE deck_id = ?"
+    ).bind(deckId).first();
+  } catch (_) {
+    // analysis_sig column not migrated yet — skip the cache lookup (caching kicks in post-migrate).
+    existingRow = null;
+  }
   if (existingRow && existingRow.content && existingRow.analysis_sig === sig) {
     return json({
       exists: true,
@@ -1578,12 +1589,22 @@ async function generateAnalysis(env, deckId) {
   };
 
   const now = new Date().toISOString();
-  await env.DB.prepare(
-    "INSERT INTO analysis (deck_id, content, model, generated_at, analysis_sig) VALUES (?, ?, ?, ?, ?) " +
-      "ON CONFLICT(deck_id) DO UPDATE SET content = excluded.content, model = excluded.model, generated_at = excluded.generated_at, analysis_sig = excluded.analysis_sig"
-  )
-    .bind(deckId, JSON.stringify(analysis), ANALYSIS_MODEL, now, sig)
-    .run();
+  try {
+    await env.DB.prepare(
+      "INSERT INTO analysis (deck_id, content, model, generated_at, analysis_sig) VALUES (?, ?, ?, ?, ?) " +
+        "ON CONFLICT(deck_id) DO UPDATE SET content = excluded.content, model = excluded.model, generated_at = excluded.generated_at, analysis_sig = excluded.analysis_sig"
+    )
+      .bind(deckId, JSON.stringify(analysis), ANALYSIS_MODEL, now, sig)
+      .run();
+  } catch (_) {
+    // analysis_sig column not migrated yet — save without it so analysis still works (caching kicks in post-migrate).
+    await env.DB.prepare(
+      "INSERT INTO analysis (deck_id, content, model, generated_at) VALUES (?, ?, ?, ?) " +
+        "ON CONFLICT(deck_id) DO UPDATE SET content = excluded.content, model = excluded.model, generated_at = excluded.generated_at"
+    )
+      .bind(deckId, JSON.stringify(analysis), ANALYSIS_MODEL, now)
+      .run();
+  }
   try {
     await env.DB.prepare("UPDATE decks SET power = ? WHERE id = ?")
       .bind(parsed.bracket || null, deckId)
