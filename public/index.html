@@ -83,14 +83,14 @@ main{padding:28px 32px;max-width:1200px;}
 .analysis-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:22px;}
 .dash-sub{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 9px;font-weight:600;}
 .dash-sub:first-child{margin-top:4px;}
-.gauge{display:grid;grid-template-columns:130px 1fr 40px;gap:11px;align-items:center;margin-bottom:9px;font-size:13px;}
+.gauge{display:grid;grid-template-columns:120px 1fr 34px;gap:10px;align-items:center;margin-bottom:8px;font-size:12px;}
 .gauge-label{color:var(--text);line-height:1.25;}
 .gauge-target{color:var(--text-dim);font-size:10px;}
-.gauge-track{height:15px;background:var(--surface2);border-radius:8px;overflow:hidden;}
+.gauge-track{height:12px;background:var(--surface2);border-radius:8px;overflow:hidden;}
 .gauge-fill{display:block;height:100%;border-radius:8px;min-width:3px;transition:width .3s;}
 .gauge-val{font-family:'Fira Mono',monospace;font-weight:700;text-align:right;font-size:14px;}
 .g-ok{background:#3fbf6a;} .g-low{background:#f5a623;} .g-red{background:#e23b32;}
-.curve-wrap{display:flex;align-items:flex-end;gap:7px;height:104px;margin:6px 0 2px;border-bottom:2px solid var(--border);padding-bottom:0;}
+.curve-wrap{display:flex;align-items:flex-end;gap:6px;height:88px;margin:6px 0 2px;border-bottom:2px solid var(--border);padding-bottom:0;}
 .curve-wrap .curve-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
 .curve-wrap .curve-col{width:100%;max-width:38px;background:#5b8def;border-radius:4px 4px 0 0;min-height:3px;}
 .curve-wrap .curve-col.zero{background:#33384a;}
@@ -113,7 +113,7 @@ main{padding:28px 32px;max-width:1200px;}
 .dir-card.active{border-color:var(--accent-g);box-shadow:0 0 0 1px var(--accent-g) inset;}
 .dir-title{font-weight:700;font-size:13px;margin-bottom:3px;}
 .dir-text{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:7px;}
-.analysis-title{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.analysis-title{font-size:16px;font-weight:800;letter-spacing:.005em;color:var(--text);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .analysis-section-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-b);margin-bottom:5px;margin-top:12px;}
 .analysis-section-label:first-child{margin-top:0;}
 .analysis-p{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;}
@@ -122,7 +122,7 @@ main{padding:28px 32px;max-width:1200px;}
 .gen-btn:disabled{opacity:.55;cursor:default;}
 .regen-btn{font-size:11px;font-weight:600;color:var(--accent-b);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;}
 .regen-btn:hover{text-decoration:underline;}
-.swaps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;margin-top:8px;}
+.swaps-grid{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin-top:8px;}
 .swap-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px;}
 .swap-line{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;}
 .swap-main{flex:1 1 auto;line-height:1.7;}
@@ -287,15 +287,24 @@ main{padding:28px 32px;max-width:1200px;}
 .row-menu .move-sel{width:100%;margin-bottom:4px;}
 .ai-sub{border-top:1px solid var(--border);padding-top:14px;margin-top:16px;}
 .ai-sub:first-child{border-top:none;padding-top:0;margin-top:0;}
-.ai-sub-head{font-size:13px;font-weight:700;letter-spacing:.02em;margin-bottom:10px;color:var(--text);}
-.selected-dir{background:linear-gradient(120deg,#1e2b3f,#221e3f);border:1px solid var(--accent-b);border-radius:10px;padding:13px 15px;}
+.ai-sub{border-top:1px solid var(--border);padding-top:18px;margin-top:20px;}
+.ai-sub-head{font-size:16px;font-weight:800;letter-spacing:.005em;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ai-sub-head .sub-meta{font-size:11px;font-weight:400;color:var(--text-dim);}
+.dir-chooser{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.dir-chooser-head{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.selected-dir{background:linear-gradient(120deg,#1e2b3f,#221e3f);border:1px solid var(--accent-b);border-radius:10px;padding:16px 18px;}
 .selected-dir-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-b);margin-bottom:5px;}
 .selected-dir-text{font-size:14px;color:var(--text);line-height:1.5;}
 .stat-badges{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
 .stat-badge{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 13px;min-width:96px;}
 .stat-badge .sb-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);}
 .stat-badge .sb-val{font-size:15px;font-weight:700;margin-top:2px;}
-.read-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;}
+.read-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.dash-wrap{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;}
+.dash-main{flex:1;min-width:320px;}
+.dash-side{flex:0 0 auto;width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;align-self:stretch;}
+.dash-side .ds-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:10px;}
+.dash-side .ds-pip{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-bottom:8px;}
 .read-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 13px;}
 .read-card .rc-head{font-size:12px;font-weight:700;color:var(--accent-b);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .read-card .rc-body{font-size:12.5px;color:var(--text-muted);line-height:1.45;}
@@ -322,7 +331,9 @@ main{padding:28px 32px;max-width:1200px;}
   .gauge{grid-template-columns:92px 1fr 32px;gap:8px;font-size:12px;}
   .gauge-val{font-size:13px;}
   #targets-form>div{grid-template-columns:96px 1fr 1fr!important;}
-  .swaps-grid{grid-template-columns:1fr;}
+  .swaps-grid{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:1fr;}
+  .read-grid{grid-template-columns:1fr;}
+  .dash-side{width:100%;}
   .roster-grid{grid-template-columns:1fr;}
   .modal{width:92vw;max-height:88vh;overflow-y:auto;}
   .curve-wrap{height:88px;}
@@ -612,11 +623,14 @@ main{padding:28px 32px;max-width:1200px;}
     </div>
     <!-- One unified AI box: a single Analyze runs everything -->
     <div class="analysis-box" id="ai-analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>✨ AI Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>✨ AI Analysis</span><span class="chev">▾</span></div>
       <div>
-        <div class="owner-only" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <button class="btn btn-p" id="analyze-btn" onclick="analyzeDeck()" style="font-size:13px;padding:8px 16px;">✨ Analyze deck (AI)</button>
-          <span style="font-size:11px;color:var(--text-dim);">One click runs the numbers, strategy read, and swap ideas together (~30–60s · uses AI credits).</span>
+        <div class="owner-only" style="margin-bottom:18px;">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-p" id="analyze-btn" onclick="analyzeDeck()" style="font-size:13px;padding:8px 16px;">✨ Analyze deck (AI)</button>
+            <span style="font-size:11px;color:var(--text-dim);">One click runs the numbers, strategy read, and swap ideas together (~30–60s · uses AI credits).</span>
+          </div>
+          <div id="analysis-meta" style="margin-top:6px;"></div>
         </div>
         <div class="ai-sub">
           <div class="ai-sub-head">🎯 Strategy &amp; Direction</div>
@@ -631,11 +645,11 @@ main{padding:28px 32px;max-width:1200px;}
           <div id="strategy-area"></div>
         </div>
         <div class="ai-sub">
-          <div class="ai-sub-head">🛒 Swap Suggestions — to buy <span id="swaps-meta"></span></div>
+          <div class="ai-sub-head">🛒 Swap Suggestions — to buy <span id="swaps-meta" class="sub-meta"></span></div>
           <div id="swaps-area"></div>
         </div>
         <div class="ai-sub">
-          <div class="ai-sub-head" style="color:var(--accent-p)">★ Swaps From Your Collection <span id="collection-meta"></span></div>
+          <div class="ai-sub-head" style="color:var(--accent-p)">★ Swaps From Your Collection <span id="collection-meta" class="sub-meta"></span></div>
           <div id="collection-area"></div>
         </div>
       </div>
@@ -1895,12 +1909,14 @@ function renderBreakdown(d) {
   stats += `<div class="bd-stat"><div class="bd-num" style="color:var(--accent-g)">${avg != null ? avg.toFixed(1) : '—'}</div><div class="bd-lbl">Avg lands in opening 7</div></div>`;
   stats += `<div class="bd-stat" title="Commander Bracket (1-5) — run the AI analysis to set this"><div class="bd-num" style="color:var(--accent-p)">${d.power || '—'}</div><div class="bd-lbl">Bracket${d.power ? ' · ' + (BRACKETS[d.power] || '') : ' (AI)'}</div></div>`;
   stats += '</div>';
-  stats += '<div style="margin-top:12px;"><button class="btn" onclick="openHandModal()">🎴 Sample hand</button></div>';
+  // By type + Sample hand sit in the left column so it fills the height beside the art (no empty gap).
+  stats += '<div class="analysis-section-label">By type</div><div class="bd-types">';
+  TYPE_ORDER.forEach((k) => { if (counts[k]) stats += `<span class="bd-chip">${k}: <b>${counts[k]}</b></span>`; });
+  stats += '</div>';
+  stats += '<div style="margin-top:14px;"><button class="btn" onclick="openHandModal()">🎴 Sample hand</button></div>';
 
   // Detailed breakdown — collapsible.
-  let detail = '<div class="analysis-section-label">By type</div><div class="bd-types">';
-  TYPE_ORDER.forEach((k) => { if (counts[k]) detail += `<span class="bd-chip">${k}: <b>${counts[k]}</b></span>`; });
-  detail += '</div>';
+  let detail = '';
   try { detail += manaAnalysisHTML(d); } catch (e) { detail += '<p class="analysis-p" style="color:var(--text-muted)">Mana analysis will appear after a price refresh.</p>'; }
   try { detail += computeManaBaseHTML(d); } catch(_) {}
   try { detail += computeLegalityHTML(d); } catch(_) {}
@@ -2628,27 +2644,28 @@ function renderDash(n) {
     el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not analyzed yet — click <b>✨ Analyze deck</b> above to tag every card and build the dashboard.</p>';
     return;
   }
-  let h = '<div class="dash-sub">Core ratios</div>';
+  // Left column: core ratios + mana curve. Right column: color pips box.
+  let main = '<div class="dash-sub" style="margin-top:0;">Core ratios</div>';
   n.benchmarks.forEach((b) => {
     const cls = b.status === 'ok' ? 'g-ok' : (b.status === 'low' ? 'g-low' : 'g-red');
     const pct = Math.min(100, Math.round((b.value / (GAUGE_MAX[b.key] || b.value || 1)) * 100));
-    h += '<div class="gauge"><span class="gauge-label">' + b.label + '<br><span class="gauge-target">target ' + b.target + '</span></span>' +
+    main += '<div class="gauge"><span class="gauge-label">' + b.label + '<br><span class="gauge-target">target ' + b.target + '</span></span>' +
       '<span class="gauge-track"><span class="gauge-fill ' + cls + '" style="width:' + pct + '%"></span></span>' +
       '<span class="gauge-val">' + b.value + '</span></div>';
   });
   const cmax = Math.max(1, ...n.curve);
   const labels = ['0', '1', '2', '3', '4', '5', '6', '7+'];
-  h += '<div class="dash-sub">Mana curve · avg ' + n.avgManaValue + ' · ' + n.earlyPlays + ' early plays (turns 1–3)</div><div class="curve-wrap">';
+  main += '<div class="dash-sub">Mana curve · avg ' + n.avgManaValue + ' · ' + n.earlyPlays + ' early plays (turns 1–3)</div><div class="curve-wrap">';
   n.curve.forEach((c, i) => {
     const ht = c === 0 ? 0 : Math.max(4, Math.round((c / cmax) * 100));
-    h += '<div class="curve-bar"><span class="curve-n">' + c + '</span><span class="curve-col' + (c === 0 ? ' zero' : '') + '" style="height:' + ht + '%"></span><span class="curve-x">' + labels[i] + '</span></div>';
+    main += '<div class="curve-bar"><span class="curve-n">' + c + '</span><span class="curve-col' + (c === 0 ? ' zero' : '') + '" style="height:' + ht + '%"></span><span class="curve-x">' + labels[i] + '</span></div>';
   });
-  h += '</div>';
-  h += '<div class="dash-sub">Color pips</div><div class="pip-row">';
+  main += '</div>';
+  let side = '<div class="ds-label">Color pips</div>';
   ['W', 'U', 'B', 'R', 'G'].forEach((c) => {
-    if (n.pips[c]) h += '<span class="pip"><span class="pip-dot" style="background:' + PIP_COLORS[c] + '"></span>' + c + ' ' + n.pips[c] + '</span>';
+    if (n.pips[c]) side += '<div class="ds-pip"><span class="pip-dot" style="background:' + PIP_COLORS[c] + '"></span>' + c + ' ' + n.pips[c] + '</div>';
   });
-  h += '</div>';
+  let h = '<div class="dash-wrap"><div class="dash-main">' + main + '</div><div class="dash-side">' + side + '</div></div>';
   if (!READONLY) {
     const inp = 'width:62px;padding:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;';
     h += '<div style="margin-top:16px;"><button class="btn" style="font-size:11px;padding:4px 10px;" onclick="toggleTargets()">⚙ Adjust targets for this deck</button></div>';
@@ -2774,17 +2791,27 @@ function renderDirectionBlock(d) {
     return;
   }
   if (READONLY) { el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">No direction set.</p>'; return; }
-  // Chooser: let AI propose options, or write your own.
-  let h = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Set a direction to focus every AI suggestion — let AI propose options, or write your own.</p>';
+  // Chooser — a prominent box; let AI propose options, write your own, or keep what's set.
+  const hasGoal = !!goal;
+  let h = '<div class="dir-chooser">';
+  h += '<div class="dir-chooser-head">Set your strategy &amp; direction</div>';
+  h += '<p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">This focuses every AI suggestion below. Let AI research and propose options, write your own, or keep the one you have.</p>';
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-    '<button class="btn btn-p" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>' +
-    '<button class="btn" style="font-size:12px;padding:6px 12px;" onclick="toggleWriteOwn()">✍ Write your own</button>' +
+    '<button class="btn btn-p" id="suggest-dir-btn" style="font-size:13px;padding:8px 14px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>' +
+    '<button class="btn" style="font-size:13px;padding:8px 14px;" onclick="toggleWriteOwn()">✍ Write your own</button>' +
+    (hasGoal ? '<button class="btn" style="font-size:13px;padding:8px 14px;" onclick="cancelDirectionChooser()">✓ Keep current direction</button>' : '') +
     '</div>';
   h += '<div id="write-own" class="write-own-box" style="display:none;"><textarea id="deck-goal" rows="3" placeholder="e.g. Lean into +1/+1 counters and go wide"></textarea>' +
-    '<div style="margin-top:7px;"><button class="btn btn-p" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button></div></div>';
-  h += '<div id="directions-area" style="margin-top:12px;"></div>';
+    '<div style="margin-top:8px;"><button class="btn btn-p" style="font-size:13px;padding:8px 14px;" onclick="saveGoal()">Save direction</button></div></div>';
+  h += '<div id="directions-area" style="margin-top:14px;"></div>';
+  h += '</div>';
   el.innerHTML = h;
   renderDirections(d);
+}
+// Close the chooser without changing anything, returning to the selected-direction box.
+function cancelDirectionChooser() {
+  dirChooserOpen = false;
+  renderDirectionBlock(STATE.decks.find((x) => x.id === currentDeckId));
 }
 function openDirectionChooser() {
   dirChooserOpen = true;
