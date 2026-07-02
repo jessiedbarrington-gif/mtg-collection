@@ -125,6 +125,7 @@ main{padding:28px 32px;max-width:1200px;}
 .regen-btn{font-size:11px;font-weight:600;color:var(--accent-b);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;}
 .regen-btn:hover{text-decoration:underline;}
 .swaps-grid{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin-top:8px;}
+.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:8px;}
 .swap-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:13px;}
 .swap-line{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:13px;}
 .swap-main{flex:1 1 auto;line-height:1.7;}
@@ -307,10 +308,18 @@ main{padding:28px 32px;max-width:1200px;}
 .dash-side{flex:0 0 auto;width:150px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;align-self:stretch;}
 .dash-side .ds-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:10px;}
 .dash-side .ds-pip{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-bottom:8px;}
-.read-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 13px;}
-.read-card .rc-head{font-size:12px;font-weight:700;color:var(--accent-b);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.read-card .rc-body{font-size:12.5px;color:var(--text-muted);line-height:1.45;}
-.learn-link{font-size:10px;font-weight:600;color:var(--text-dim);white-space:nowrap;text-decoration:none;}
+.read-chips{display:flex;flex-direction:column;gap:8px;}
+.read-chip{background:var(--surface2);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.read-chip.open{border-color:#3a4256;}
+.rc-toggle{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;}
+.rc-toggle:hover{background:#20242f;}
+.rc-label{font-size:13px;font-weight:700;color:var(--accent-b);white-space:nowrap;flex:0 0 auto;}
+.rc-teaser{font-size:12.5px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.read-chip.open .rc-teaser{display:none;}
+.rc-chev{font-size:11px;color:var(--text-dim);flex:0 0 auto;transition:transform .15s;}
+.read-chip.open .rc-chev{transform:rotate(180deg);}
+.rc-detail{padding:0 14px 13px 14px;font-size:13px;color:var(--text);line-height:1.5;}
+.learn-link{font-size:11px;font-weight:600;color:var(--text-dim);white-space:nowrap;text-decoration:none;}
 .learn-link:hover{color:var(--accent-b);text-decoration:underline;}
 .write-own-box{margin-top:10px;}
 @media(max-width:600px){
@@ -335,6 +344,7 @@ main{padding:28px 32px;max-width:1200px;}
   #targets-form>div{grid-template-columns:96px 1fr 1fr!important;}
   .swaps-grid{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:1fr;}
   .read-grid{grid-template-columns:1fr;}
+  .owned-grid{grid-template-columns:1fr;}
   .dash-side{width:100%;}
   .roster-grid{grid-template-columns:1fr;}
   .modal{width:92vw;max-height:88vh;overflow-y:auto;}
@@ -2639,19 +2649,33 @@ function strategyHTML(a, deckId) {
   badges += '</div>';
   let out = badges;
   if (a.summary) out += '<p class="analysis-p" style="margin-bottom:14px;">' + esc(a.summary) + '</p>';
-  const cards = [
-    ['Win conditions', a.winConditions, googleUrl(cmd + ' commander win conditions')],
-    ['Interaction', a.interaction, edhrecUrl(cmd)],
-    ['Synergy & redundancy', a.synergyRedundancy, edhrecUrl(cmd)],
-    ['Strengths', a.strengths, googleUrl(cmd + ' EDH deck guide')],
-    ['Weaknesses', a.weaknesses, googleUrl(cmd + ' EDH how to beat')],
-  ].filter((x) => x[1]);
-  out += '<div class="read-grid">' + cards.map(([label, text, url]) =>
-    '<div class="read-card"><div class="rc-head">' + esc(label) +
-    '<a class="learn-link" href="' + url + '" target="_blank" rel="noopener">learn more ↗</a></div>' +
-    '<div class="rc-body">' + esc(text) + '</div></div>'
+  const items = [
+    ['🎯', 'Win conditions', a.winConditions, googleUrl(cmd + ' commander win conditions')],
+    ['⚔️', 'Interaction', a.interaction, edhrecUrl(cmd)],
+    ['🔗', 'Synergy & redundancy', a.synergyRedundancy, edhrecUrl(cmd)],
+    ['💪', 'Strengths', a.strengths, googleUrl(cmd + ' EDH deck guide')],
+    ['⚠️', 'Weaknesses', a.weaknesses, googleUrl(cmd + ' EDH how to beat')],
+  ].filter((x) => x[2]);
+  // Expandable chips: a one-line teaser by default; click to reveal the full read + a learn-more link.
+  out += '<div class="read-chips">' + items.map(([icon, label, text, url]) =>
+    '<div class="read-chip">' +
+    '<div class="rc-toggle" onclick="toggleReadChip(this)">' +
+    '<span class="rc-label">' + icon + ' ' + esc(label) + '</span>' +
+    '<span class="rc-teaser">' + esc(shortText(text, 90)) + '</span>' +
+    '<span class="rc-chev">▾</span></div>' +
+    '<div class="rc-detail" style="display:none;">' + esc(text) +
+    ' <a class="learn-link" href="' + url + '" target="_blank" rel="noopener">learn more ↗</a></div>' +
+    '</div>'
   ).join('') + '</div>';
   return out;
+}
+// Toggle one Read-on-the-Deck chip open/closed.
+function toggleReadChip(head) {
+  const chip = head.closest('.read-chip');
+  if (!chip) return;
+  const det = chip.querySelector('.rc-detail');
+  const open = chip.classList.toggle('open');
+  if (det) det.style.display = open ? 'block' : 'none';
 }
 function swapsHTML(a) {
   return '<div class="tier-label tier-low">Budget Swaps</div><div class="swaps-grid">' + (a.low || []).map((s) => swapCard(s, 'swap-price-low')).join('') + '</div>' +
@@ -2917,9 +2941,13 @@ function renderCollection(deckId, col, d) {
   const cMeta = document.getElementById('collection-meta');
   cMeta.textContent = '';
   if (col && col.exists) {
-    cArea.innerHTML = (col.recs && col.recs.length)
-      ? '<div class="swaps-grid">' + col.recs.map(ownedSwapCard).join('') + '</div>'
-      : '<p class="analysis-p" style="color:var(--text-muted)">None of your loose cards are a clear upgrade for this deck right now.</p>';
+    // Only show recs whose card is still LOOSE — once you make a swap the card leaves
+    // the loose pile, so it drops off here. Apply them all and the list empties.
+    const looseNames = new Set(STATE.loose.map((c) => c.n.toLowerCase()));
+    const recs = (col.recs || []).filter((r) => looseNames.has(String(r.i || '').toLowerCase()));
+    cArea.innerHTML = recs.length
+      ? '<div class="owned-grid">' + recs.map(ownedSwapCard).join('') + '</div>'
+      : '<p class="analysis-p" style="color:var(--text-muted)">None of your loose cards are a clear upgrade for this deck right now. 🎉</p>';
     cMeta.innerHTML = dateMeta(col.generatedAt) + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genCollection(\'' + deckId + '\')">↻ Update (AI)</button>');
   } else if (READONLY) {
     cArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not generated yet.</p>';
