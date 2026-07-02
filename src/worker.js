@@ -796,6 +796,34 @@ const DIRECTIONS_SCHEMA = {
   required: ["directions"],
 };
 
+// Run a Sonnet web-search research pass and return a plain-text briefing (or "" on any failure).
+// web_search is a server-side tool; the model may return stop_reason "pause_turn" if it hits the
+// internal loop limit — re-send to let it resume.
+async function webResearch(env, prompt) {
+  const messages = [{ role: "user", content: prompt }];
+  const system =
+    "You are a Magic: The Gathering Commander (EDH) research assistant. Use web search to find how players actually build and " +
+    "upgrade the given commander right now — the popular archetypes, key payoffs, staple cards, and distinct upgrade paths. " +
+    "Then write a concise plain-text briefing (no preamble) of the DISTINCT directions people take this deck and what each prioritizes.";
+  for (let i = 0; i < 4; i++) {
+    const out = await anthropicJSON(env, {
+      model: "claude-sonnet-5",
+      max_tokens: 1500,
+      system,
+      messages,
+      tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 5 }],
+    });
+    if (!out.ok) return "";
+    const data = out.data;
+    if (data.stop_reason === "pause_turn") {
+      messages.push({ role: "assistant", content: data.content });
+      continue;
+    }
+    return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+  }
+  return "";
+}
+
 async function generateDirections(env, deckId) {
   if (!env.ANTHROPIC_API_KEY) return json({ error: "AI is not configured." }, 503);
   const deck = await env.DB.prepare("SELECT * FROM decks WHERE id = ?").bind(deckId).first();
@@ -804,17 +832,35 @@ async function generateDirections(env, deckId) {
     await env.DB.prepare("SELECT name FROM cards WHERE deck_id = ? ORDER BY position, id").bind(deckId).all()
   ).results || [];
   const list = cards.map((c) => c.name).join(", ");
+  const cmdr = deck.commander + (deck.alt_commander ? " / " + deck.alt_commander : "");
+  const colorNames = { w: "White", u: "Blue", k: "Black", r: "Red", g: "Green" };
+  const colors = (deck.pips || "").split(",").filter(Boolean).map((c) => colorNames[c] || c).join(", ") || "its color identity";
 
+  // Step 1 — best-effort web research (empty string on any failure, so directions still generate).
+  let research = "";
+  try {
+    research = await webResearch(env,
+      `Research the Magic: The Gathering Commander "${deck.commander}" (colors: ${colors}). ` +
+      `How do players build and upgrade this commander right now? Summarize the distinct popular archetypes, key payoffs, and upgrade paths. ` +
+      `The player's current decklist: ${list}`
+    );
+  } catch (_) {}
+
+  // Step 2 — structured 3 directions, grounded in the research when available.
   const out = await anthropicJSON(env, {
     model: "claude-sonnet-5",
     max_tokens: 1200,
     system:
-      "You are an expert Magic: The Gathering Commander deck advisor. Given a deck, propose exactly 3 DISTINCT directions the " +
-      "player could realistically take it, each meaningfully different (e.g. a budget-friendly route, a higher-power competitive route, " +
-      "and a theme/archetype pivot). Each must fit the commander's color identity and build on cards already present. Be specific and practical.",
+      "You are an expert Magic: The Gathering Commander deck advisor. Propose exactly 3 DISTINCT directions the player could " +
+      "realistically take this deck, each meaningfully different (e.g. a budget route, a higher-power competitive route, and a theme/archetype pivot). " +
+      "Each must fit the commander's color identity and build on cards already present. When web research is provided, ground your directions in " +
+      "the real archetypes and cards it surfaces. Be specific and practical.",
     messages: [{
       role: "user",
-      content: `Deck: ${deck.title}\nCommander: ${deck.commander}${deck.alt_commander ? " / " + deck.alt_commander : ""}\n\nCurrent cards: ${list}\n\nPropose 3 distinct directions.`,
+      content:
+        `Deck: ${deck.title}\nCommander: ${cmdr}\nColors: ${colors}\n\nCurrent cards: ${list}` +
+        (research ? `\n\nWeb research on how people build/upgrade this commander:\n${research}` : "") +
+        `\n\nPropose 3 distinct directions.`,
     }],
     output_config: { format: { type: "json_schema", schema: DIRECTIONS_SCHEMA } },
   });

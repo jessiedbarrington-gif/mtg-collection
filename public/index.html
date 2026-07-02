@@ -2817,7 +2817,7 @@ function renderDirections(d) {
 async function genDirections() {
   if (!currentDeckId) return;
   const btn = document.getElementById('suggest-dir-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '✨ Thinking…'; }
+  if (btn) { btn.disabled = true; btn.textContent = '🔎 Researching the web… (~30–60s)'; }
   try {
     const r = await api('/api/decks/' + currentDeckId + '/directions', { method: 'POST' });
     const d = STATE.decks.find((x) => x.id === currentDeckId);

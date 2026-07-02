@@ -37,7 +37,7 @@ Each AI call uses the smallest model that reliably handles its task (cost mitiga
 | Call | Model | Cached via |
 |---|---|---|
 | `saveGoalWithSummary` (goal one-liner) | `claude-haiku-4-5-20251001` | — (tiny, always runs) |
-| `generateDirections` | `claude-sonnet-5` | — |
+| `generateDirections` | `claude-sonnet-5` | — (two calls: `webResearch` w/ `web_search_20260209` tool → structured directions; research is best-effort, empty on failure) |
 | `scanCard` (vision) | `claude-sonnet-5` | — (per-photo, expected) |
 | `tagDeck` | `claude-sonnet-5` | `decks.tag_sig` vs `tagSig(cards, goal)` |
 | `generateAnalysis` | `claude-sonnet-5` | `analysis.analysis_sig` vs `analysisSig(cards, deck)` |
