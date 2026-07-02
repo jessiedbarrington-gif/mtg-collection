@@ -11,7 +11,7 @@ A personal Magic: The Gathering Commander collection tracker. Single-page web ap
 - **Live URL:** https://barrington-mtg.barrington-mtg-jessie.workers.dev
 
 ## Auth
-- `OWNER_KEY` secret: `turtles123` — sent as `X-Owner-Key` header for write operations
+- `OWNER_KEY` secret: sent as `X-Owner-Key` header for write operations. The value is NOT stored here — it lives in `.dev.vars` locally and as a Cloudflare secret. Case-sensitive (starts with a capital letter).
 - `SHARE_TOKEN`: `barrington-47ac9be1a4a44c54` — read-only share link at `/view/<token>`
 - `ANTHROPIC_API_KEY`: stored as Cloudflare secret (set via `wrangler secret put ANTHROPIC_API_KEY`)
 
