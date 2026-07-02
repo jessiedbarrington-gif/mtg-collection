@@ -53,7 +53,8 @@ main{padding:28px 32px;max-width:1200px;}
 .kilo::before{background:linear-gradient(90deg,#60a5fa,#f87171,#e2e8f0);}
 .custom::before{background:linear-gradient(90deg,#60a5fa,#c084fc,#4ade80);}
 .deck-title{font-family:'Cinzel',serif;font-size:15px;font-weight:600;margin-bottom:3px;}
-.deck-cmdr{font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.4;}
+.deck-cmdr{font-size:12px;color:var(--text-muted);margin-bottom:6px;line-height:1.4;}
+.deck-byline{font-size:11.5px;color:var(--text-dim);line-height:1.4;margin-bottom:10px;font-style:italic;}
 .pips{display:flex;gap:3px;margin-bottom:10px;}
 .pip{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;}
 .pip-b{background:#1a1a2e;color:#8888ff;border:1px solid #444;}
@@ -284,6 +285,23 @@ main{padding:28px 32px;max-width:1200px;}
 .row-menu button{display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--text);cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;border-radius:6px;}
 .row-menu button:hover{background:var(--surface);}
 .row-menu .move-sel{width:100%;margin-bottom:4px;}
+.ai-sub{border-top:1px solid var(--border);padding-top:14px;margin-top:16px;}
+.ai-sub:first-child{border-top:none;padding-top:0;margin-top:0;}
+.ai-sub-head{font-size:13px;font-weight:700;letter-spacing:.02em;margin-bottom:10px;color:var(--text);}
+.selected-dir{background:linear-gradient(120deg,#1e2b3f,#221e3f);border:1px solid var(--accent-b);border-radius:10px;padding:13px 15px;}
+.selected-dir-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-b);margin-bottom:5px;}
+.selected-dir-text{font-size:14px;color:var(--text);line-height:1.5;}
+.stat-badges{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.stat-badge{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 13px;min-width:96px;}
+.stat-badge .sb-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);}
+.stat-badge .sb-val{font-size:15px;font-weight:700;margin-top:2px;}
+.read-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;}
+.read-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 13px;}
+.read-card .rc-head{font-size:12px;font-weight:700;color:var(--accent-b);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.read-card .rc-body{font-size:12.5px;color:var(--text-muted);line-height:1.45;}
+.learn-link{font-size:10px;font-weight:600;color:var(--text-dim);white-space:nowrap;text-decoration:none;}
+.learn-link:hover{color:var(--accent-b);text-decoration:underline;}
+.write-own-box{margin-top:10px;}
 @media(max-width:600px){
   header{padding:18px 14px;}
   nav{padding:0 14px;}
@@ -557,68 +575,70 @@ main{padding:28px 32px;max-width:1200px;}
         </select>
       </div>
     </div>
+    <div class="owner-only" style="margin:2px 0 12px;">
+      <button class="btn btn-p" onclick="document.getElementById('ai-analysis-box').scrollIntoView({behavior:'smooth',block:'start'})">✨ Jump to AI analysis ↓</button>
+    </div>
+    <!-- Deck Overview (automatic — recomputes on every card change, no AI) -->
     <div class="analysis-box" id="detail-breakdown" style="display:none;"></div>
-    <!-- Card list sits directly under the overview, before the AI sections -->
-    <div class="toolbar">
-      <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Search cards…" oninput="filterDetail(this.value)"/></div>
-      <select class="filter-sel" id="deck-sort" onchange="deckSort=this.value; var dd=STATE.decks.find(function(x){return x.id===currentDeckId;}); if(dd) renderDetailCards(dd);"><option value="">Sort: by type</option><option value="name">Name</option><option value="cmc">Mana value</option><option value="price">Price ↓</option></select>
-      <button class="btn owner-only" onclick="toggleForm('form-detail')">+ Add Card</button>
-      <button class="btn btn-p owner-only" onclick="openBuild(currentDeckId)">📦 Add from loose</button>
-      <button class="btn owner-only" onclick="toggleForm('form-detail-paste')">📋 Paste list</button>
-      <button class="btn owner-only" id="deck-refresh" onclick="refreshDeckPrices()">⟳ Refresh Prices</button>
-      <span id="deck-updated" style="font-size:11px;color:var(--text-dim);align-self:center;"></span>
-      <button class="btn owner-only" onclick="editDeck()">✎ Edit deck</button>
-      <button class="btn owner-only" onclick="deleteDeck()" style="color:var(--accent-r);border-color:#5a2a2a;">🗑 Delete deck</button>
-      <button class="btn owner-only" onclick="openExportModal()">📋 Export</button>
-      <button class="btn" onclick="openHandModal()">🎴 Sample hand</button>
-    </div>
-    <div class="add-form owner-only" id="form-detail">
-      <div class="ff sm"><label>Qty</label><input type="number" id="dc-qty" value="1" min="1"/></div>
-      <div class="ff" style="flex:1"><label>Card Name</label><input type="text" id="dc-name" placeholder="Card name"/></div>
-      <div class="ff sm" style="width:90px"><label>Set</label><input type="text" id="dc-set" placeholder="Set"/></div>
-      <div class="fa"><button class="btn btn-p" onclick="addToDeck()">Add</button><button class="btn" onclick="toggleForm('form-detail')">Cancel</button></div>
-    </div>
-    <div class="add-form owner-only" id="form-detail-paste" style="flex-direction:column;align-items:stretch;">
-      <div class="ff" style="flex:1"><label>Paste this deck's list — one card per line, e.g. "1 Sol Ring [LCC]"</label><textarea id="paste-detail" rows="10" placeholder="1 Sol Ring [LCC]&#10;1 Arcane Signet [TMC]&#10;7 Island [GRN]"></textarea></div>
-      <div class="fa"><button class="btn btn-p" onclick="importToDeck()">Import</button><button class="btn" onclick="toggleForm('form-detail-paste')">Cancel</button></div>
-    </div>
-    <div id="detail-countbar" style="margin-bottom:10px;font-family:'Fira Mono',monospace;font-size:14px;font-weight:600;"></div>
-    <div id="detail-cards"></div>
-    <!-- AI-driven sections follow the card list; collapsed by default -->
+    <!-- Card list — its own collapsible box -->
     <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>📊 Deck Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>🃏 Cards <span id="cards-meta" style="font-size:11px;color:var(--text-dim);font-weight:400;margin-left:4px;"></span></span><span class="chev">▾</span></div>
       <div>
-        <div class="owner-only" style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="btn btn-p" id="analyze-btn" onclick="runAnalysis()" style="font-size:12px;padding:6px 12px;">⚙ Run AI tagging</button>
-          <span style="font-size:11px;color:var(--text-dim);">Tags every card by role, then computes the dashboard (~30s).</span>
+        <div class="toolbar">
+          <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Search cards…" oninput="filterDetail(this.value)"/></div>
+          <select class="filter-sel" id="deck-sort" onchange="deckSort=this.value; var dd=STATE.decks.find(function(x){return x.id===currentDeckId;}); if(dd) renderDetailCards(dd);"><option value="">Sort: by type</option><option value="name">Name</option><option value="cmc">Mana value</option><option value="price">Price ↓</option></select>
+          <button class="btn owner-only" onclick="toggleForm('form-detail')">+ Add Card</button>
+          <button class="btn btn-p owner-only" onclick="openBuild(currentDeckId)">📦 Add from loose</button>
+          <button class="btn owner-only" onclick="toggleForm('form-detail-paste')">📋 Paste card list</button>
+          <button class="btn owner-only" id="deck-refresh" onclick="refreshDeckPrices()">⟳ Refresh Prices</button>
+          <span id="deck-updated" style="font-size:11px;color:var(--text-dim);align-self:center;"></span>
+          <button class="btn owner-only" onclick="editDeck()">✎ Edit deck</button>
+          <button class="btn owner-only" onclick="deleteDeck()" style="color:var(--accent-r);border-color:#5a2a2a;">🗑 Delete deck</button>
+          <button class="btn owner-only" onclick="openExportModal()">📋 Export</button>
         </div>
-        <div id="analysis-dash"></div>
+        <div class="add-form owner-only" id="form-detail">
+          <div class="ff sm"><label>Qty</label><input type="number" id="dc-qty" value="1" min="1"/></div>
+          <div class="ff" style="flex:1"><label>Card Name</label><input type="text" id="dc-name" placeholder="Card name"/></div>
+          <div class="ff sm" style="width:90px"><label>Set</label><input type="text" id="dc-set" placeholder="Set"/></div>
+          <div class="fa"><button class="btn btn-p" onclick="addToDeck()">Add</button><button class="btn" onclick="toggleForm('form-detail')">Cancel</button></div>
+        </div>
+        <div class="add-form owner-only" id="form-detail-paste" style="flex-direction:column;align-items:stretch;">
+          <div class="ff" style="flex:1"><label>Paste this deck's card list — one card per line, e.g. "1 Sol Ring [LCC]"</label><textarea id="paste-detail" rows="10" placeholder="1 Sol Ring [LCC]&#10;1 Arcane Signet [TMC]&#10;7 Island [GRN]"></textarea></div>
+          <div class="fa"><button class="btn btn-p" onclick="importToDeck()">Import</button><button class="btn" onclick="toggleForm('form-detail-paste')">Cancel</button></div>
+        </div>
+        <div id="detail-countbar" style="margin-bottom:10px;font-family:'Fira Mono',monospace;font-size:14px;font-weight:600;"></div>
+        <div id="detail-cards"></div>
       </div>
     </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Strategy &amp; Direction</span><span style="display:flex;gap:10px;align-items:center;"><span id="strategy-meta"></span><span class="chev">▸</span></span></div>
-      <div style="display:none;">
-        <div class="ff" style="margin-bottom:14px;">
-          <label style="display:block;margin-bottom:5px;">Your upgrade path / direction — guides every AI suggestion below</label>
-          <textarea id="deck-goal" rows="3" placeholder="e.g. Build around -1/-1 counters and go-wide +1/+1 counters for the TMNT upgrade path"></textarea>
-          <div style="margin-top:7px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-p owner-only" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button><span class="owner-only" style="font-size:11px;color:var(--text-dim);">then Regenerate below to apply it</span></div>
-          <div id="goal-summary" style="font-size:12px;color:var(--accent-b);margin-top:9px;font-style:italic;"></div>
-          <div class="owner-only" style="margin-top:10px;">
-            <button class="btn" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>
-            <span style="font-size:11px;color:var(--text-dim);margin-left:6px;">AI proposes 3 paths — pick one to make it active.</span>
-          </div>
-          <div id="directions-area" style="margin-top:10px;"></div>
+    <!-- One unified AI box: a single Analyze runs everything -->
+    <div class="analysis-box" id="ai-analysis-box">
+      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>✨ AI Analysis</span><span style="display:flex;gap:10px;align-items:center;"><span id="analysis-meta"></span><span class="chev">▾</span></span></div>
+      <div>
+        <div class="owner-only" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-p" id="analyze-btn" onclick="analyzeDeck()" style="font-size:13px;padding:8px 16px;">✨ Analyze deck (AI)</button>
+          <span style="font-size:11px;color:var(--text-dim);">One click runs the numbers, strategy read, and swap ideas together (~30–60s · uses AI credits).</span>
         </div>
-        <div id="strategy-area"></div>
+        <div class="ai-sub">
+          <div class="ai-sub-head">🎯 Strategy &amp; Direction</div>
+          <div id="direction-block"></div>
+        </div>
+        <div class="ai-sub">
+          <div class="ai-sub-head">📊 The Numbers</div>
+          <div id="analysis-dash"></div>
+        </div>
+        <div class="ai-sub">
+          <div class="ai-sub-head">🧭 Read on the Deck</div>
+          <div id="strategy-area"></div>
+        </div>
+        <div class="ai-sub">
+          <div class="ai-sub-head">🛒 Swap Suggestions — to buy <span id="swaps-meta"></span></div>
+          <div id="swaps-area"></div>
+        </div>
+        <div class="ai-sub">
+          <div class="ai-sub-head" style="color:var(--accent-p)">★ Swaps From Your Collection <span id="collection-meta"></span></div>
+          <div id="collection-area"></div>
+        </div>
       </div>
-    </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Swap Suggestions (to buy)</span><span style="display:flex;gap:10px;align-items:center;"><span id="swaps-meta"></span><span class="chev">▸</span></span></div>
-      <div id="swaps-area" style="display:none;"></div>
-    </div>
-    <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span style="color:var(--accent-p)">★ Recommended Swaps From Your Collection</span><span style="display:flex;gap:10px;align-items:center;"><span id="collection-meta"></span><span class="chev">▸</span></span></div>
-      <div id="collection-area" style="display:none;"></div>
     </div>
   </div>
 </main>
@@ -1743,13 +1763,16 @@ function buildGrid() {
     const ownerBadge = d.owner ? `<span class="owner-badge owner-${d.owner.toLowerCase()}">${d.owner}</span>` : '';
     const div = document.createElement('div');
     div.className = 'deck-card ' + d.theme;
-    const artUrl = 'https://api.scryfall.com/cards/named?format=image&version=art_crop&exact=' + encodeURIComponent(d.commander);
+    // Fuzzy Scryfall match so non-exact commander names still resolve art.
+    const artUrl = 'https://api.scryfall.com/cards/named?format=image&version=art_crop&fuzzy=' + encodeURIComponent(d.commander || '');
+    const byline = (d.goalSummary || '').trim() || (d.goal || '').trim();
     div.innerHTML = `
       <img class="deck-art" loading="lazy" alt="" src="${artUrl}" onerror="this.remove()">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div class="deck-title">${esc(d.title)}</div>${ownerBadge}
       </div>
       <div class="deck-cmdr">${esc(d.commander)}${d.alt ? '<br><span style="opacity:.65">+ ' + esc(d.alt) + '</span>' : ''}</div>
+      ${byline ? '<div class="deck-byline">' + esc(shortText(byline, 90)) + '</div>' : ''}
       <div class="pips">${pipHTML(d.pips)}</div>
       ${d.cards.length === 0 ? '<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">Decklist not yet entered</div>' : ''}
       <div class="deck-meta">
@@ -1798,6 +1821,8 @@ function renderDetail(d) {
   if (osel) osel.value = d.owner || '';
   const du = document.getElementById('deck-updated');
   if (du) du.textContent = globalUpdatedLabel();
+  const cm = document.getElementById('cards-meta');
+  if (cm) cm.textContent = total + ' / 100';
   renderDetailCards(d);
   renderBreakdown(d);
 }
@@ -1857,45 +1882,51 @@ function renderBreakdown(d) {
   if (d.cards.length === 0) { box.style.display = 'none'; return; }
   box.style.display = 'block';
   const total = d.cards.reduce((s, c) => s + c.q, 0);
-  const val = deckValue(d);
   const lib = d.cards.filter((c) => !isCommanderCard(d, c)); // library = deck minus commander
   const N = lib.reduce((s, c) => s + c.q, 0);
   const L = lib.filter((c) => c.t === 'Land').reduce((s, c) => s + c.q, 0);
   const avg = L > 0 && N > 0 ? (7 * L) / N : null; // expected lands in opening 7
   const counts = {};
   d.cards.forEach((c) => { const k = c.t || 'Uncategorized'; counts[k] = (counts[k] || 0) + c.q; });
-  const priced = d.cards.filter((c) => c.p != null);
-  const top = [...priced].sort((a, b) => b.p * b.q - a.p * a.q).slice(0, 5);
 
-  let body = '<div class="bd-row">';
-  body += `<div class="bd-stat"><div class="bd-num">${total}</div><div class="bd-lbl">Total cards</div></div>`;
-  body += `<div class="bd-stat"><div class="bd-num" style="color:var(--accent-y)">${money(val)}</div><div class="bd-lbl">Est. value (TCGplayer)</div></div>`;
-  body += `<div class="bd-stat"><div class="bd-num" style="color:var(--accent-g)">${avg != null ? avg.toFixed(1) : '—'}</div><div class="bd-lbl">Avg lands in opening 7</div></div>`;
-  body += `<div class="bd-stat" title="Commander Bracket (1-5) — generate the AI analysis to set this"><div class="bd-num" style="color:var(--accent-p)">${d.power || '—'}</div><div class="bd-lbl">Bracket${d.power ? ' · ' + (BRACKETS[d.power] || '') : ' (AI)'}</div></div>`;
-  body += '</div>';
-  body += '<div class="analysis-section-label">By type</div><div class="bd-types">';
-  TYPE_ORDER.forEach((k) => { if (counts[k]) body += `<span class="bd-chip">${k}: <b>${counts[k]}</b></span>`; });
-  body += '</div>';
-  if (top.length) {
-    body += '<div class="analysis-section-label">Most valuable</div><div class="bd-types">';
-    top.forEach((c) => { body += `<span class="bd-chip">${esc(c.n)} — <b>${money(c.p)}</b></span>`; });
-    body += '</div>';
-  } else if (!READONLY) {
-    body += '<p class="analysis-p" style="color:var(--text-muted);margin-top:10px;">Press “⟳ Refresh Prices” on the Collection tab to load values and sort cards by type.</p>';
-  }
-  try { body += manaAnalysisHTML(d); } catch (e) { body += '<p class="analysis-p" style="color:var(--text-muted)">Mana analysis will appear after a price refresh.</p>'; }
-  try { body += computeManaBaseHTML(d); } catch(_) {}
-  try { body += computeLegalityHTML(d); } catch(_) {}
-  try { body += computeBracketHTML(d); } catch(_) {}
+  // Key stats — always visible (even when the detail is collapsed).
+  let stats = '<div class="bd-row">';
+  stats += `<div class="bd-stat"><div class="bd-num">${total}</div><div class="bd-lbl">Total cards</div></div>`;
+  stats += `<div class="bd-stat"><div class="bd-num" style="color:var(--accent-g)">${avg != null ? avg.toFixed(1) : '—'}</div><div class="bd-lbl">Avg lands in opening 7</div></div>`;
+  stats += `<div class="bd-stat" title="Commander Bracket (1-5) — run the AI analysis to set this"><div class="bd-num" style="color:var(--accent-p)">${d.power || '—'}</div><div class="bd-lbl">Bracket${d.power ? ' · ' + (BRACKETS[d.power] || '') : ' (AI)'}</div></div>`;
+  stats += '</div>';
+  stats += '<div style="margin-top:12px;"><button class="btn" onclick="openHandModal()">🎴 Sample hand</button></div>';
 
+  // Detailed breakdown — collapsible.
+  let detail = '<div class="analysis-section-label">By type</div><div class="bd-types">';
+  TYPE_ORDER.forEach((k) => { if (counts[k]) detail += `<span class="bd-chip">${k}: <b>${counts[k]}</b></span>`; });
+  detail += '</div>';
+  try { detail += manaAnalysisHTML(d); } catch (e) { detail += '<p class="analysis-p" style="color:var(--text-muted)">Mana analysis will appear after a price refresh.</p>'; }
+  try { detail += computeManaBaseHTML(d); } catch(_) {}
+  try { detail += computeLegalityHTML(d); } catch(_) {}
+  try { detail += computeBracketHTML(d); } catch(_) {}
+
+  // Commander art: prefer the enriched card image, else a fuzzy Scryfall lookup by name.
   const cmdCard = d.cards.find((c) => isCommanderCard(d, c) && c.img);
-  const imgHTML = cmdCard
-    ? '<div style="flex:0 0 auto;text-align:center;"><img src="' + cmdCard.img + '" alt="' + esc(cmdCard.n) + '" loading="lazy" style="width:240px;max-width:100%;border-radius:10px;border:1px solid var(--border);display:block;"/><div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + esc(cmdCard.n) + '</div></div>'
-    : '';
+  const artSrc = (cmdCard && cmdCard.img)
+    ? cmdCard.img
+    : 'https://api.scryfall.com/cards/named?format=image&version=art_crop&fuzzy=' + encodeURIComponent(d.commander || '');
+  const artName = cmdCard ? cmdCard.n : (d.commander || '');
+  const imgHTML = '<div style="flex:0 0 auto;text-align:center;"><img src="' + esc(artSrc) + '" alt="' + esc(artName) + '" loading="lazy" style="width:220px;max-width:100%;border-radius:10px;border:1px solid var(--border);display:block;" onerror="this.style.display=\'none\'"/><div style="font-size:11px;color:var(--text-muted);margin-top:6px;">' + esc(artName) + '</div></div>';
 
   box.innerHTML =
-    '<div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>Deck Overview</span><span class="chev">▾</span></div>' +
-    '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;"><div style="flex:1;min-width:260px;">' + body + '</div>' + imgHTML + '</div>';
+    '<div class="analysis-title collapse-head" onclick="toggleOverviewDetail(this)"><span>Deck Overview <span style="font-size:11px;color:var(--text-dim);font-weight:400;">· updates automatically</span></span><span class="chev">▾</span></div>' +
+    '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin-top:10px;"><div style="flex:1;min-width:240px;">' + stats + '</div>' + imgHTML + '</div>' +
+    '<div id="ov-detail" style="margin-top:14px;">' + detail + '</div>';
+}
+// Overview collapse keeps the key stats + art visible; only the detailed breakdown toggles.
+function toggleOverviewDetail(head) {
+  const det = document.getElementById('ov-detail');
+  if (!det) return;
+  const hidden = det.style.display === 'none';
+  det.style.display = hidden ? '' : 'none';
+  const chev = head.querySelector('.chev');
+  if (chev) chev.textContent = hidden ? '▾' : '▸';
 }
 
 const MANA_COLORS = [
@@ -2540,19 +2571,35 @@ async function doSwap(btn) {
     toast(cutCard ? ('Swapped in ' + addName + ' · moved ' + cutName + ' to loose.') : ('Added ' + addName + ' to the deck.'));
   } catch (e) { btn.disabled = false; btn.textContent = orig; toast(e.message); }
 }
-function strategyHTML(a) {
-  const powerHTML = a.power
-    ? '<div class="analysis-section-label">Bracket</div><p class="analysis-p"><b style="color:var(--accent-p)">' + bracketLabel(a.power) + '</b>' + (a.powerNote ? ' — ' + esc(a.powerNote) : '') + '</p>'
-    : '';
-  const sect = (label, val) => val ? '<div class="analysis-section-label">' + label + '</div><p class="analysis-p">' + esc(val) + '</p>' : '';
-  return powerHTML +
-    sect('Strategy', a.summary) +
-    sect('Win Conditions', a.winConditions) +
-    sect('Interaction', a.interaction) +
-    sect('Synergy & Redundancy', a.synergyRedundancy) +
-    sect('Speed', a.speed) +
-    sect('Strengths', a.strengths) +
-    sect('Weaknesses', a.weaknesses);
+function edhrecUrl(name) {
+  const slug = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return 'https://edhrec.com/commanders/' + encodeURIComponent(slug);
+}
+function googleUrl(q) { return 'https://www.google.com/search?q=' + encodeURIComponent(q); }
+function shortText(s, n) { const t = String(s || '').trim(); return t.length > n ? t.slice(0, n).replace(/\s+\S*$/, '') + '…' : t; }
+// Visual read on the deck: bracket/speed as badges, the qualitative notes as compact cards with "learn more" links.
+function strategyHTML(a, deckId) {
+  const d = STATE.decks.find((x) => x.id === deckId);
+  const cmd = d ? d.commander : '';
+  let badges = '<div class="stat-badges">';
+  if (a.power) badges += '<div class="stat-badge"><div class="sb-label">Bracket</div><div class="sb-val" style="color:var(--accent-p)">' + a.power + ' · ' + (BRACKETS[a.power] || '') + '</div></div>';
+  if (a.speed) badges += '<div class="stat-badge" title="' + esc(a.speed) + '"><div class="sb-label">Speed</div><div class="sb-val" style="color:var(--accent-g);font-size:12.5px;line-height:1.3;">' + esc(shortText(a.speed, 30)) + '</div></div>';
+  badges += '</div>';
+  let out = badges;
+  if (a.summary) out += '<p class="analysis-p" style="margin-bottom:14px;">' + esc(a.summary) + '</p>';
+  const cards = [
+    ['Win conditions', a.winConditions, googleUrl(cmd + ' commander win conditions')],
+    ['Interaction', a.interaction, edhrecUrl(cmd)],
+    ['Synergy & redundancy', a.synergyRedundancy, edhrecUrl(cmd)],
+    ['Strengths', a.strengths, googleUrl(cmd + ' EDH deck guide')],
+    ['Weaknesses', a.weaknesses, googleUrl(cmd + ' EDH how to beat')],
+  ].filter((x) => x[1]);
+  out += '<div class="read-grid">' + cards.map(([label, text, url]) =>
+    '<div class="read-card"><div class="rc-head">' + esc(label) +
+    '<a class="learn-link" href="' + url + '" target="_blank" rel="noopener">learn more ↗</a></div>' +
+    '<div class="rc-body">' + esc(text) + '</div></div>'
+  ).join('') + '</div>';
+  return out;
 }
 function swapsHTML(a) {
   return '<div class="tier-label tier-low">Budget Swaps</div><div class="swaps-grid">' + (a.low || []).map((s) => swapCard(s, 'swap-price-low')).join('') + '</div>' +
@@ -2578,7 +2625,7 @@ function renderDash(n) {
   const el = document.getElementById('analysis-dash');
   if (!el) return;
   if (!n || n.error || !n.tagged) {
-    el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not analyzed yet — click <b>Run AI tagging</b> to tag every card by role and build the dashboard.</p>';
+    el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Not analyzed yet — click <b>✨ Analyze deck</b> above to tag every card and build the dashboard.</p>';
     return;
   }
   let h = '<div class="dash-sub">Core ratios</div>';
@@ -2646,83 +2693,124 @@ async function loadNumbers(deckId) {
     setAnalysisMeta(n);
   } catch (_) { /* leave the prompt */ }
 }
-async function runAnalysis() {
+// One button runs everything: tag → numbers → strategy/swaps → owned-collection swaps.
+async function analyzeDeck() {
   if (!currentDeckId) return;
+  const deckId = currentDeckId;
   const btn = document.getElementById('analyze-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⚙ AI tagging… (~30s)'; }
+  const sArea = document.getElementById('strategy-area');
+  const wArea = document.getElementById('swaps-area');
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Analyzing… (~30–60s)'; }
+  sArea.innerHTML = '<div class="loading">✨ Analyzing — tagging cards, reading the deck, and finding swaps…</div>';
+  wArea.innerHTML = '<div class="loading">…</div>';
+  document.getElementById('collection-area').innerHTML = '<div class="loading">…</div>';
   try {
-    const r = await api('/api/decks/' + currentDeckId + '/tag', { method: 'POST' });
-    await loadNumbers(currentDeckId);
-    toast(r.cached ? 'No changes since last tagging — used cached result (no AI credits used).' : 'Analysis updated (AI credits used).');
-  } catch (e) { toast(e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = '⚙ Run AI tagging'; } }
+    await api('/api/decks/' + deckId + '/tag', { method: 'POST' });   // roles → numbers
+    await loadNumbers(deckId);
+    const r = await api('/api/decks/' + deckId + '/analysis', { method: 'POST' }); // strategy + swaps
+    sArea.innerHTML = strategyHTML(r.analysis, deckId);
+    wArea.innerHTML = swapsHTML(r.analysis);
+    document.getElementById('swaps-meta').innerHTML = dateMeta(r.generatedAt);
+    const d = STATE.decks.find((x) => x.id === deckId);
+    if (d) { d.hasAnalysis = true; d.power = r.analysis.power || d.power; renderBreakdown(d); }
+    const c = await api('/api/decks/' + deckId + '/collection', { method: 'POST' }); // owned swaps
+    renderCollection(deckId, { exists: true, recs: c.recs, generatedAt: c.generatedAt }, d);
+    toast(r.cached ? 'Deck unchanged — reused the last analysis (no AI credits used).' : 'Deck analyzed (AI credits used).');
+  } catch (e) {
+    sArea.innerHTML = '<p class="analysis-p" style="color:var(--accent-r)">' + esc(e.message) + '</p>' +
+      '<button class="btn btn-p" style="margin-top:10px" onclick="analyzeDeck()">Try again</button>';
+    wArea.innerHTML = '';
+    document.getElementById('collection-area').innerHTML = '';
+  } finally { if (btn) { btn.disabled = false; btn.textContent = '✨ Analyze deck (AI)'; } }
 }
 
 async function loadAnalysis(deckId) {
   const sArea = document.getElementById('strategy-area');
-  const sMeta = document.getElementById('strategy-meta');
   const wArea = document.getElementById('swaps-area');
-  sMeta.textContent = '';
   document.getElementById('swaps-meta').textContent = '';
   sArea.innerHTML = '<div class="loading">Loading…</div>';
   wArea.innerHTML = '';
   document.getElementById('collection-area').innerHTML = '';
   document.getElementById('collection-meta').textContent = '';
   const d = STATE.decks.find((x) => x.id === deckId);
-  const goalEl = document.getElementById('deck-goal');
-  goalEl.value = (d && d.goal) || '';
-  goalEl.disabled = READONLY;
-  const sumEl = document.getElementById('goal-summary');
-  if (sumEl) sumEl.textContent = (d && d.goalSummary) ? '“' + d.goalSummary + '”' : '';
-  renderDirections(d);
+  dirChooserOpen = false;
+  renderDirectionBlock(d);
   renderDash(null);
   setAnalysisMeta(null);
   loadNumbers(deckId);
   try {
     const r = await api('/api/decks/' + deckId + '/analysis');
     if (r.exists && r.analysis) {
-      sArea.innerHTML = strategyHTML(r.analysis);
+      sArea.innerHTML = strategyHTML(r.analysis, deckId);
       wArea.innerHTML = swapsHTML(r.analysis);
-      const dm = dateMeta(r.generatedAt);
-      sMeta.innerHTML = dm + (READONLY ? '' : '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate (AI)</button>');
-      document.getElementById('swaps-meta').innerHTML = dm;
+      document.getElementById('swaps-meta').innerHTML = dateMeta(r.generatedAt);
     } else if (READONLY) {
       sArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">No AI analysis yet.</p>';
     } else if (d && d.cards.length === 0) {
       sArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Add this deck\'s cards first.</p>';
     } else {
-      sArea.innerHTML = '<button class="gen-btn" onclick="genAnalysis(\'' + deckId + '\')">✦ Generate AI Analysis</button>';
-      wArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Generate the analysis to get swap suggestions.</p>';
+      sArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Click <b>✨ Analyze deck</b> above to generate the strategy read and swap ideas.</p>';
     }
     renderCollection(deckId, r.collection || { exists: false }, d);
   } catch (e) {
     sArea.innerHTML = '<p class="analysis-p" style="color:var(--accent-r)">' + esc(e.message) + '</p>';
   }
 }
-async function saveGoal() {
-  if (!currentDeckId) return;
-  const goal = document.getElementById('deck-goal').value.trim();
-  const sumEl = document.getElementById('goal-summary');
-  if (sumEl) sumEl.innerHTML = goal ? '<span class="loading">Summarizing direction…</span>' : '';
-  try {
-    const r = await api('/api/decks/' + currentDeckId + '/goal', { method: 'POST', body: { goal } });
-    const d = STATE.decks.find((x) => x.id === currentDeckId);
-    if (d) { d.goal = r.goal; d.goalSummary = r.summary || ''; }
-    if (sumEl) sumEl.textContent = r.summary ? '“' + r.summary + '”' : '';
-    toast('Direction saved — Regenerate to apply it to the suggestions.');
-  } catch (e) { if (sumEl) sumEl.textContent = ''; toast(e.message); }
-}
+
+// ── DIRECTION (goal) ─────────────────────────────────
+let dirChooserOpen = false;
 let currentDirections = [];
+function renderDirectionBlock(d) {
+  const el = document.getElementById('direction-block');
+  if (!el) return;
+  const goal = ((d && d.goal) || '').trim();
+  // A direction is set and we're not editing → show the clear "selected" box.
+  if (goal && !dirChooserOpen) {
+    el.innerHTML = '<div class="selected-dir"><div class="selected-dir-label">✓ Selected strategy &amp; direction</div>' +
+      '<div class="selected-dir-text">' + esc(goal) + '</div>' +
+      ((d && d.goalSummary) ? '<div style="font-size:12px;color:var(--accent-b);margin-top:6px;font-style:italic;">“' + esc(d.goalSummary) + '”</div>' : '') +
+      (READONLY ? '' : '<div style="margin-top:11px;"><button class="btn" style="font-size:11px;padding:5px 11px;" onclick="openDirectionChooser()">✎ Change direction</button></div>') +
+      '</div>';
+    return;
+  }
+  if (READONLY) { el.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">No direction set.</p>'; return; }
+  // Chooser: let AI propose options, or write your own.
+  let h = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Set a direction to focus every AI suggestion — let AI propose options, or write your own.</p>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+    '<button class="btn btn-p" id="suggest-dir-btn" style="font-size:12px;padding:6px 12px;" onclick="genDirections()">✨ Suggest 3 directions (AI)</button>' +
+    '<button class="btn" style="font-size:12px;padding:6px 12px;" onclick="toggleWriteOwn()">✍ Write your own</button>' +
+    '</div>';
+  h += '<div id="write-own" class="write-own-box" style="display:none;"><textarea id="deck-goal" rows="3" placeholder="e.g. Lean into +1/+1 counters and go wide"></textarea>' +
+    '<div style="margin-top:7px;"><button class="btn btn-p" style="font-size:12px;padding:6px 12px;" onclick="saveGoal()">Save direction</button></div></div>';
+  h += '<div id="directions-area" style="margin-top:12px;"></div>';
+  el.innerHTML = h;
+  renderDirections(d);
+}
+function openDirectionChooser() {
+  dirChooserOpen = true;
+  renderDirectionBlock(STATE.decks.find((x) => x.id === currentDeckId));
+}
+function toggleWriteOwn() {
+  const w = document.getElementById('write-own');
+  if (!w) return;
+  const show = w.style.display === 'none';
+  w.style.display = show ? 'block' : 'none';
+  if (show) {
+    const t = document.getElementById('deck-goal');
+    const d = STATE.decks.find((x) => x.id === currentDeckId);
+    if (t) { t.value = (d && d.goal) || ''; t.focus(); }
+  }
+}
 function renderDirections(d) {
   const area = document.getElementById('directions-area');
   if (!area) return;
   currentDirections = (d && d.directions) || [];
   if (!currentDirections.length) { area.innerHTML = ''; return; }
   const active = ((d && d.goal) || '').trim();
-  area.innerHTML = '<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 7px;">AI-suggested directions — tap one to make it active</div>' +
+  area.innerHTML = '<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 7px;">AI-suggested directions — tap one to select it</div>' +
     currentDirections.map((x, i) => {
       const isActive = active && x.text.trim() === active;
-      const btn = READONLY ? '' : ('<button class="btn' + (isActive ? '' : ' btn-p') + '" style="font-size:11px;padding:4px 10px;" onclick="useDirection(' + i + ')"' + (isActive ? ' disabled' : '') + '>' + (isActive ? '✓ Active' : 'Use this') + '</button>');
+      const btn = READONLY ? '' : ('<button class="btn' + (isActive ? '' : ' btn-p') + '" style="font-size:11px;padding:4px 10px;" onclick="useDirection(' + i + ')"' + (isActive ? ' disabled' : '') + '>' + (isActive ? '✓ Selected' : 'Use this') + '</button>');
       return '<div class="dir-card' + (isActive ? ' active' : '') + '"><div class="dir-title">' + esc(x.title) + '</div><div class="dir-text">' + esc(x.text) + '</div>' + btn + '</div>';
     }).join('');
 }
@@ -2741,10 +2829,24 @@ async function genDirections() {
 async function useDirection(i) {
   const x = currentDirections[i];
   if (!x) return;
-  document.getElementById('deck-goal').value = x.text;
-  await saveGoal();
-  const d = STATE.decks.find((z) => z.id === currentDeckId);
-  renderDirections(d);
+  await saveGoalValue(x.text);
+  dirChooserOpen = false;
+  renderDirectionBlock(STATE.decks.find((z) => z.id === currentDeckId));
+}
+async function saveGoal() {
+  const t = document.getElementById('deck-goal');
+  await saveGoalValue(t ? t.value.trim() : '');
+  dirChooserOpen = false;
+  renderDirectionBlock(STATE.decks.find((x) => x.id === currentDeckId));
+}
+async function saveGoalValue(goal) {
+  if (!currentDeckId) return;
+  try {
+    const r = await api('/api/decks/' + currentDeckId + '/goal', { method: 'POST', body: { goal } });
+    const d = STATE.decks.find((x) => x.id === currentDeckId);
+    if (d) { d.goal = r.goal; d.goalSummary = r.summary || ''; }
+    toast(goal ? 'Direction saved — click “✨ Analyze deck” to apply it.' : 'Direction cleared.');
+  } catch (e) { toast(e.message); }
 }
 
 function renderCollection(deckId, col, d) {
@@ -2762,31 +2864,6 @@ function renderCollection(deckId, col, d) {
     cArea.innerHTML = '<p class="analysis-p" style="color:var(--text-muted)">Add cards first.</p>';
   } else {
     cArea.innerHTML = '<button class="gen-btn" onclick="genCollection(\'' + deckId + '\')">★ Find upgrades I already own (AI)</button>';
-  }
-}
-
-async function genAnalysis(deckId) {
-  const sArea = document.getElementById('strategy-area');
-  const wArea = document.getElementById('swaps-area');
-  sArea.innerHTML = '<div class="loading">✦ Analyzing deck with Claude… this can take 20–40 seconds.</div>';
-  wArea.innerHTML = '<div class="loading">…</div>';
-  document.getElementById('strategy-meta').textContent = '';
-  try {
-    const r = await api('/api/decks/' + deckId + '/analysis', { method: 'POST' });
-    sArea.innerHTML = strategyHTML(r.analysis);
-    wArea.innerHTML = swapsHTML(r.analysis);
-    const dm = dateMeta(r.generatedAt);
-    document.getElementById('strategy-meta').innerHTML = dm + '<button class="regen-btn" onclick="event.stopPropagation(); genAnalysis(\'' + deckId + '\')">↻ Regenerate (AI)</button>';
-    document.getElementById('swaps-meta').innerHTML = dm;
-    const d = STATE.decks.find((x) => x.id === deckId);
-    if (d) { d.hasAnalysis = true; d.power = r.analysis.power || d.power; renderBreakdown(d); }
-    toast(r.cached ? 'No changes since last analysis — used cached result (no AI credits used).' : 'Analysis updated (AI credits used).');
-    // Regenerating the analysis also refreshes the "from your collection" recommendations.
-    genCollection(deckId);
-  } catch (e) {
-    sArea.innerHTML = '<p class="analysis-p" style="color:var(--accent-r)">' + esc(e.message) + '</p>' +
-      '<button class="gen-btn" style="margin-top:10px" onclick="genAnalysis(\'' + deckId + '\')">Try again</button>';
-    wArea.innerHTML = '';
   }
 }
 
