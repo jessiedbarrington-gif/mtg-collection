@@ -113,7 +113,9 @@ main{padding:28px 32px;max-width:1200px;}
 .dir-card.active{border-color:var(--accent-g);box-shadow:0 0 0 1px var(--accent-g) inset;}
 .dir-title{font-weight:700;font-size:13px;margin-bottom:3px;}
 .dir-text{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:7px;}
-.analysis-title{font-size:16px;font-weight:800;letter-spacing:.005em;color:var(--text);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.analysis-title{font-size:16px;font-weight:800;letter-spacing:.01em;color:var(--text);margin-bottom:16px;display:flex;justify-content:center;align-items:center;gap:10px;text-align:center;border:1px solid var(--border);background:var(--surface2);border-radius:9px;padding:11px 14px;position:relative;}
+.analysis-title.collapse-head{cursor:pointer;}
+.analysis-title.collapse-head .chev{position:absolute;right:14px;top:50%;transform:translateY(-50%);}
 .analysis-section-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-b);margin-bottom:5px;margin-top:12px;}
 .analysis-section-label:first-child{margin-top:0;}
 .analysis-p{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;}
@@ -287,8 +289,8 @@ main{padding:28px 32px;max-width:1200px;}
 .row-menu .move-sel{width:100%;margin-bottom:4px;}
 .ai-sub{border-top:1px solid var(--border);padding-top:14px;margin-top:16px;}
 .ai-sub:first-child{border-top:none;padding-top:0;margin-top:0;}
-.ai-sub{border-top:1px solid var(--border);padding-top:18px;margin-top:20px;}
-.ai-sub-head{font-size:16px;font-weight:800;letter-spacing:.005em;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ai-sub{border-top:none;padding-top:0;margin-top:26px;}
+.ai-sub-head{font-size:16px;font-weight:800;letter-spacing:.01em;margin-bottom:16px;color:var(--text);display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;text-align:center;border:1px solid var(--border);background:var(--surface2);border-radius:9px;padding:10px 12px;}
 .ai-sub-head .sub-meta{font-size:11px;font-weight:400;color:var(--text-dim);}
 .dir-chooser{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;}
 .dir-chooser-head{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
@@ -593,8 +595,9 @@ main{padding:28px 32px;max-width:1200px;}
     <div class="analysis-box" id="detail-breakdown" style="display:none;"></div>
     <!-- Card list — its own collapsible box -->
     <div class="analysis-box">
-      <div class="analysis-title collapse-head" onclick="toggleCollapse(this)"><span>🃏 Cards <span id="cards-meta" style="font-size:11px;color:var(--text-dim);font-weight:400;margin-left:4px;"></span></span><span class="chev">▾</span></div>
-      <div>
+      <div class="analysis-title collapse-head" onclick="toggleCardsDetail(this)"><span>🃏 Cards <span id="cards-meta" style="font-size:12px;color:var(--text-dim);font-weight:600;margin-left:4px;"></span></span><span class="chev">▾</span></div>
+      <div id="cards-summary" style="display:none;"></div>
+      <div id="cards-body">
         <div class="toolbar">
           <div class="search-wrap"><span class="si">🔍</span><input type="text" placeholder="Search cards…" oninput="filterDetail(this.value)"/></div>
           <select class="filter-sel" id="deck-sort" onchange="deckSort=this.value; var dd=STATE.decks.find(function(x){return x.id===currentDeckId;}); if(dd) renderDetailCards(dd);"><option value="">Sort: by type</option><option value="name">Name</option><option value="cmc">Mana value</option><option value="price">Price ↓</option></select>
@@ -1837,6 +1840,8 @@ function renderDetail(d) {
   if (du) du.textContent = globalUpdatedLabel();
   const cm = document.getElementById('cards-meta');
   if (cm) cm.textContent = total + ' / 100';
+  const csum = document.getElementById('cards-summary');
+  if (csum) csum.innerHTML = cardsSummaryHTML(d);
   renderDetailCards(d);
   renderBreakdown(d);
 }
@@ -1943,6 +1948,37 @@ function toggleOverviewDetail(head) {
   det.style.display = hidden ? '' : 'none';
   const chev = head.querySelector('.chev');
   if (chev) chev.textContent = hidden ? '▾' : '▸';
+}
+// Cards collapse: hide the full list but show an at-a-glance summary (value, legality, top cards).
+function toggleCardsDetail(head) {
+  const body = document.getElementById('cards-body');
+  const summ = document.getElementById('cards-summary');
+  if (!body) return;
+  const collapsing = body.style.display !== 'none';
+  body.style.display = collapsing ? 'none' : '';
+  if (summ) summ.style.display = collapsing ? '' : 'none';
+  const chev = head.querySelector('.chev');
+  if (chev) chev.textContent = collapsing ? '▸' : '▾';
+}
+// At-a-glance card summary shown when the Cards box is collapsed.
+function cardsSummaryHTML(d) {
+  const total = d.cards.reduce((s, c) => s + c.q, 0);
+  const val = deckValue(d);
+  const priced = d.cards.filter((c) => c.p != null);
+  const top = [...priced].sort((a, b) => b.p * b.q - a.p * a.q).slice(0, 5);
+  let h = '<div class="bd-row">';
+  h += `<div class="bd-stat"><div class="bd-num">${total}</div><div class="bd-lbl">Cards</div></div>`;
+  h += `<div class="bd-stat"><div class="bd-num" style="color:var(--accent-y)">${money(val)}</div><div class="bd-lbl">Est. value</div></div>`;
+  h += `<div class="bd-stat"><div class="bd-num" style="color:${total === 100 ? 'var(--accent-g)' : 'var(--accent-r)'}">${total === 100 ? '✓' : '✕'}</div><div class="bd-lbl">${total === 100 ? 'Legal · 100' : total + ' / 100'}</div></div>`;
+  h += '</div>';
+  if (top.length) {
+    h += '<div class="analysis-section-label">Most valuable</div><div class="bd-types">';
+    top.forEach((c) => { h += `<span class="bd-chip">${esc(c.n)} — <b>${money(c.p)}</b></span>`; });
+    h += '</div>';
+  } else if (!READONLY) {
+    h += '<p class="analysis-p" style="color:var(--text-muted);margin-top:8px;">Refresh prices to see card values here.</p>';
+  }
+  return h;
 }
 
 const MANA_COLORS = [
